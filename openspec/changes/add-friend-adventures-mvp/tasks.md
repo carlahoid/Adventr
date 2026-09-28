@@ -1,29 +1,29 @@
 ## 1. Project skeleton
 
-- [ ] 1.1 Generate a Spring Boot 3 / Java 21 Maven project (`web`, `security`, `oauth2-client`, `data-jpa`, `validation`, `thymeleaf`, `actuator`, `flyway`, `postgresql`) with the base package `app.adventr`
-- [ ] 1.2 Add the htmx static asset, the Thymeleaf layout dialect (or fragment-based layout), and a base layout with header, group-switcher slot, and CSRF `hx-headers` on `<body>`
-- [ ] 1.3 Add Testcontainers (Postgres, Keycloak via `dasniko/testcontainers-keycloak`) and ArchUnit test dependencies, and create a context-loads smoke test
-- [ ] 1.4 Add a multi-stage `Dockerfile` for the app (Temurin 21 JRE, multi-arch base image, non-root user, explicit `-Xmx`)
-- [ ] 1.5 Add `.gitignore` entries (`.env`, `target/`, `.idea/`, `.DS_Store`) and a README section on local development
+- [x] 1.1 Generate a Spring Boot 4 / Java 21 Maven project (`web`, `security`, `oauth2-client`, `data-jpa`, `validation`, `thymeleaf`, `actuator`, `flyway`, `postgresql`) with the base package `app.adventr`
+- [x] 1.2 Add the htmx static asset, the Thymeleaf layout dialect (or fragment-based layout), and a base layout with header, group-switcher slot, and CSRF `hx-headers` on `<body>`
+- [x] 1.3 Add Testcontainers (Postgres, Keycloak via `dasniko/testcontainers-keycloak`) and ArchUnit test dependencies, and create a context-loads smoke test
+- [x] 1.4 Add a multi-stage `Dockerfile` for the app (Temurin 21 JRE, multi-arch base image, non-root user, explicit `-Xmx`)
+- [x] 1.5 Add `.gitignore` entries (`.env`, `target/`, `.idea/`, `.DS_Store`) and a README section on local development
 
 ## 2. Docker Compose and Keycloak realm
 
-- [ ] 2.1 Write `docker-compose.yml` with `postgres` (init script creating the `adventr` and `keycloak` databases and users), `keycloak`, `app`, and `caddy`, plus named volumes `pgdata`, `images`, `caddy_data`, and `backups`
-- [ ] 2.2 Add health checks and `depends_on: condition: service_healthy` ordering (postgres → keycloak → app)
-- [ ] 2.3 Configure Keycloak for production behind a proxy (`KC_HTTP_RELATIVE_PATH=/auth`, `KC_HOSTNAME`, `KC_PROXY_HEADERS=xforwarded`, `KC_HTTP_ENABLED=true`, heap limits) with `--import-realm`
-- [ ] 2.4 Create `keycloak/realm-adventr.json`: the realm `adventr`, registration on, reset-password on, email verification off, a confidential client `adventr-app` with redirect URIs restricted to `${APP_BASE_URL}/*`, SMTP settings from env, and an optional Google IdP disabled by default
-- [ ] 2.5 Write the `Caddyfile`: `{$APP_HOST}` with `/auth/*` → keycloak and `/*` → app, HTTP → HTTPS, and no static route to images
-- [ ] 2.6 Add `.env.example` documenting every variable (hostnames, DB passwords, client secret, SMTP, Google credentials, backup remote)
-- [ ] 2.7 Add `docker-compose.dev.yml` for local development (Keycloak on `localhost:8081`, app run from the IDE) and verify login against a local realm
+- [x] 2.1 Write `docker-compose.yml` with `postgres` (init script creating the `adventr` and `keycloak` databases and users), `keycloak`, `app`, and `caddy`, plus named volumes `pgdata`, `images`, `caddy_data`, and `backups`
+- [x] 2.2 Add health checks and `depends_on: condition: service_healthy` ordering (postgres → keycloak → app)
+- [x] 2.3 Configure Keycloak for production behind a proxy (`KC_HTTP_RELATIVE_PATH=/auth`, `KC_HOSTNAME`, `KC_PROXY_HEADERS=xforwarded`, `KC_HTTP_ENABLED=true`, heap limits) with `--import-realm`
+- [x] 2.4 Create `keycloak/realm-adventr.json`: the realm `adventr`, registration on, reset-password on, email verification off, a confidential client `adventr-app` with redirect URIs restricted to `${APP_BASE_URL}/*`, SMTP settings from env, and an optional Google IdP disabled by default
+- [x] 2.5 Write the `Caddyfile`: `{$APP_HOST}` with `/auth/*` → keycloak and `/*` → app, HTTP → HTTPS, and no static route to images
+- [x] 2.6 Add `.env.example` documenting every variable (hostnames, DB passwords, client secret, SMTP, Google credentials, backup remote)
+- [x] 2.7 Add `docker-compose.dev.yml` for local development (Keycloak on `localhost:8081`, app run from the IDE) and verify login against a local realm
 
 ## 3. Authentication and users (user-auth)
 
-- [ ] 3.1 Configure Spring Security `oauth2Login()` against the Keycloak issuer. Require authentication for everything except `/`, static assets, and error pages. Keep CSRF enabled
-- [ ] 3.2 Flyway `V1`: `users` table (`keycloak_sub` unique, `display_name`, `email`, `created_at`, `deleted_at`)
-- [ ] 3.3 Implement user provisioning on login (a custom `OidcUserService` or a success handler) that upserts by `sub` and refreshes the name and email, and expose a `CurrentUser` resolver
-- [ ] 3.4 Implement RP-initiated logout (`OidcClientInitiatedLogoutSuccessHandler`) back to `/`
-- [ ] 3.5 Verify that the saved-request redirect returns users to the originally requested URL after login
-- [ ] 3.6 Tests: first login creates a user, a second login updates without duplicating, POST without CSRF returns 403, and unauthenticated access redirects to Keycloak
+- [x] 3.1 Configure Spring Security `oauth2Login()` against the Keycloak issuer. Require authentication for everything except `/`, static assets, and error pages. Keep CSRF enabled
+- [x] 3.2 Flyway `V1`: `users` table (`keycloak_sub` unique, `display_name`, `email`, `created_at`, `deleted_at`)
+- [x] 3.3 Implement user provisioning on login (a custom `OidcUserService` or a success handler) that upserts by `sub` and refreshes the name and email, and expose a `CurrentUser` resolver
+- [x] 3.4 Implement RP-initiated logout (`OidcClientInitiatedLogoutSuccessHandler`) back to `/`
+- [x] 3.5 Verify that the saved-request redirect returns users to the originally requested URL after login
+- [x] 3.6 Tests: first login creates a user, a second login updates without duplicating, POST without CSRF returns 403, and unauthenticated access redirects to Keycloak
 
 ## 4. Groups, memberships, and central authorization (groups)
 

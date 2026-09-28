@@ -31,7 +31,7 @@ Keycloak owns credentials, registration, password reset, and Google login. Group
 
 On every authenticated request, a filter or `OidcUserService` hook upserts `users(keycloak_sub, display_name, email)`. The display name comes from `preferred_username`, or from `given_name`/`family_name` when present, and is refreshed at each login.
 
-### 2. Spring Boot 3 + Thymeleaf + htmx
+### 2. Spring Boot 4 + Thymeleaf + htmx
 - Spring Security `oauth2Login()` with Keycloak as the OIDC provider. Sessions are server-side (the default `HttpSession`), and CSRF protection stays enabled. htmx sends the CSRF token through an `hx-headers` attribute on `<body>`.
 - Reactions and comments are htmx endpoints that return Thymeleaf fragments, e.g. the reaction bar fragment or the comment list fragment. Every page also works as a full-page render.
 - *Alternative*: React SPA + REST. Rejected: it adds a second toolchain and token handling in the browser for no MVP benefit.
@@ -141,3 +141,23 @@ Rollback means redeploying the previous app image tag. Flyway migrations are for
 
 - Google login: include it in the first deploy, or add it later? The realm config supports both. It is off by default until a Google OAuth client is created.
 - Which off-host backup target to use: Oracle Object Storage or Google Drive via `rclone`. This can be decided at deploy time.
+
+## Implementation Notes
+
+Small decisions and deviations made during implementation (task groups 1–3).
+
+- **Spring Boot 4.1 instead of 3.** Spring Initializr no longer offers 3.x, and the 3.5 line is out of free OSS support. Boot 4.1.1 (Spring Security 7, Testcontainers 2) runs on Java 21 and changes nothing in the architecture. Decided with the project owner on 2026-09-28.
+- **htmx 2.0.x, not 4.x.** htmx 4 makes attribute inheritance opt-in, which would break the `hx-headers` CSRF attribute on `<body>` (decision 2). The WebJar is pinned to 2.0.11 and served via `webjars-locator-lite` at `/webjars/htmx.org/dist/htmx.min.js`.
+- **Layout.** A fragment-based layout (`layout.html` with `page(title, content)`) instead of the Thymeleaf Layout Dialect, which avoids an extra dependency.
+- **Display name.** "given_name family_name" when either is set, otherwise `preferred_username`, then email, then `sub`.
+- **User provisioning.** A custom `OidcUserService` upserts the user at login with `INSERT … ON CONFLICT (keycloak_sub) DO UPDATE`, so concurrent first requests cannot create duplicates. `CurrentUser` is resolved per request by `sub`, with a provisioning fallback.
+- **Public paths.** `/`, `/error`, `/css/**`, `/webjars/**`, `/favicon.ico`, and `/actuator/health/**`. Caddy answers 404 for `/actuator/*`, so health is reachable only inside the Docker network.
+- **Realm placeholders.** `realm-adventr.json` uses Keycloak's `${ENV_VAR:default}` substitution. The SMTP sender has a syntactically valid default, because Keycloak refuses to import a realm with an empty sender address. `SMTP_AUTH` and `SMTP_STARTTLS` are placeholders too, so the dev stack can use Mailpit.
+- **Realm import runs only once** (`IGNORE_EXISTING`). Later changes to the file or to secrets such as `KEYCLOAK_CLIENT_SECRET` must also be made in the admin console, or applied by re-creating the Keycloak database.
+- **Realm hardening defaults.** PKCE (S256) is required for `adventr-app`, brute-force protection is on, and the password policy is `length(8) and notUsername`.
+- **Container-to-public-host traffic.** Caddy has a Compose network alias equal to `APP_HOST`. The app's OIDC discovery and token calls to `https://<APP_HOST>/auth/...` therefore go straight to Caddy (with its real certificate) instead of hairpinning through the host's public IP. The app therefore `depends_on` Caddy (started) in addition to Keycloak (healthy).
+- **Keycloak start mode.** It uses `start --import-realm` (not `--optimized`), so Keycloak re-runs its build step on each start, which adds some startup time. This is acceptable for the MVP and avoids a custom image.
+- **Health checks.** Neither the Keycloak nor the Temurin image has curl, so the checks speak HTTP over bash's `/dev/tcp`. Keycloak's check uses management port 9000 (`/auth/health/ready`) and the app's uses `/actuator/health/readiness`.
+- **Dev setup.** `docker-compose.dev.yml` runs Postgres (:5432), Keycloak (:8081/auth), and Mailpit (:8025). The app runs from the IDE with the `dev` profile (`application-dev.yml` holds the throwaway dev credentials).
+- **Tests.** Integration tests share one context with Postgres and Keycloak containers, and Keycloak imports the production realm file. The app listens on a pre-chosen free port, because the realm only allows redirect URIs under `APP_BASE_URL`. The end-to-end login tests use a small scripted HTTP client (`Browser`): Keycloak sets `Secure` cookies even on http://localhost, which browsers accept but `java.net.CookieManager` does not send.
+- **Keycloak admin console.** It is reachable at `https://<APP_HOST>/auth/admin` and protected only by the bootstrap admin password. Restricting it (e.g. with a Caddy IP allowlist) is a candidate follow-up.

@@ -4,7 +4,7 @@ Friends collect "we should do this together" ideas in chat threads, where they g
 
 ## What Changes
 
-- New Spring Boot 3 / Java 21 web application (Thymeleaf + htmx) backed by PostgreSQL. The repository is currently empty.
+- New Spring Boot 4 / Java 21 web application (Thymeleaf + htmx) backed by PostgreSQL. The repository is currently empty.
 - Keycloak handles identity only: login, self-registration, password reset (via a free SMTP relay), and optional Google login. The app mirrors each Keycloak user into a local `User` row keyed by `sub` on first login.
 - Private groups with Owner and Member roles. A user can create groups and belong to many groups. A single, central membership check in the service layer protects all group-scoped data, including uploaded images.
 - Reusable, expiring invite links (`/join/{token}`) that the owner can regenerate. Regenerating invalidates the previous link.
@@ -30,7 +30,7 @@ Friends collect "we should do this together" ideas in chat threads, where they g
 
 ## Impact
 
-- **Code**: New Maven project (Spring Boot 3, Spring Security OAuth2 Client, Spring Data JPA, Flyway, Thymeleaf, htmx via WebJar or static asset, Thumbnailator or equivalent for image resizing).
+- **Code**: New Maven project (Spring Boot 4, Spring Security OAuth2 Client, Spring Data JPA, Flyway, Thymeleaf, htmx via WebJar or static asset, Thumbnailator or equivalent for image resizing).
 - **Systems**: Keycloak (one realm, one confidential client), PostgreSQL with two databases (`adventr`, `keycloak`), Caddy, and a Docker volume for images and backups.
 - **External free services**: Oracle Cloud Always Free (or a self-hosted Pi), DuckDNS or a Cloudflare Tunnel hostname, a free SMTP relay for Keycloak password-reset mail, and optionally a Google OAuth client.
 - **Data**: New schema: `users`, `groups`, `memberships`, `invites`, `adventures`, `reactions`, `comments`.
