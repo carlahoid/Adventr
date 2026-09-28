@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title>Adventr</title>
+</head>
+<body>
+<main class="container landing">
+	<h1>Your friend group's bucket list</h1>
+	<p>Collect the things you want to do together, vote on them, plan them, and remember them.</p>
+	<a class="button" th:href="@{/groups}">Log in or register</a>
+</main>
+</body>
+</html>

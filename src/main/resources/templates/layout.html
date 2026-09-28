@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--/* Base layout. Pages use: <html th:replace="~{layout :: page(~{::title}, ~{::main})}"> */-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title th:replace="${title}">Adventr</title>
+	<link rel="stylesheet" th:href="@{/css/app.css}">
+	<script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+</head>
+<!--/* htmx inherits hx-headers from <body>, so every htmx request carries the CSRF token. */-->
+<body th:hx-headers="${'{&quot;' + _csrf.headerName + '&quot;: &quot;' + _csrf.token + '&quot;}'}">
+	<header th:replace="~{fragments/header :: header}"></header>
+	<main th:replace="${content}"></main>
+</body>
+</html>

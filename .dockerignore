@@ -1,0 +1,14 @@
+.git
+.idea
+.vscode
+.env
+.env.*
+target
+openspec
+continuations
+docs
+keycloak
+postgres
+*.md
+docker-compose*.yml
+Caddyfile

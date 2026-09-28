@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title>Something went wrong · Adventr</title>
+</head>
+<body>
+<main class="container">
+	<h1 th:switch="${status}">
+		<span th:case="404">Not found</span>
+		<span th:case="403">Not allowed</span>
+		<span th:case="*">Something went wrong</span>
+	</h1>
+	<p th:switch="${status}">
+		<span th:case="404">This page doesn't exist, or you don't have access to it.</span>
+		<span th:case="403">You don't have permission to do that.</span>
+		<span th:case="*">Please try again in a moment.</span>
+	</p>
+	<a th:href="@{/groups}">Back to my groups</a>
+</main>
+</body>
+</html>

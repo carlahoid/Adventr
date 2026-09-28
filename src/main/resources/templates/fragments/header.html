@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="site-header" th:fragment="header">
+	<a class="brand" th:href="@{/}">Adventr</a>
+	<!--/* Group switcher slot: filled from the "switcherGroups" model attribute (task 4.5). */-->
+	<nav class="group-switcher" th:if="${switcherGroups != null}"></nav>
+	<div class="account" th:if="${currentUser != null}">
+		<span class="account-name" th:text="${currentUser.displayName}">Anna</span>
+		<form th:action="@{/logout}" method="post">
+			<button type="submit" class="link-button">Log out</button>
+		</form>
+	</div>
+</header>
+</body>
+</html>
