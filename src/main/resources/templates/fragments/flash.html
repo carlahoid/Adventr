@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* One-off messages after a redirect (flash attributes "notice" and "error"). */-->
+<div th:fragment="flash" th:remove="tag">
+	<p class="flash flash-notice" role="status" th:if="${notice != null}" th:text="${notice}">Done.</p>
+	<p class="flash flash-error" role="alert" th:if="${error != null}" th:text="${error}">That didn't work.</p>
+</div>
+</body>
+</html>

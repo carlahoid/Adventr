@@ -5,8 +5,29 @@
 </head>
 <body>
 <main class="container">
+	<div th:replace="~{fragments/flash :: flash}"></div>
 	<h1>My groups</h1>
-	<p class="empty-state">You're not in any group yet. Create one, or ask a friend for an invite link.</p>
+
+	<ul class="group-list" th:unless="${groups.isEmpty()}">
+		<li th:each="g : ${groups}">
+			<a th:href="@{/groups/{id}(id=${g.id})}" th:text="${g.name}">Mountain Crew</a>
+			<span class="muted" th:text="${g.memberCount == 1 ? '1 member' : g.memberCount + ' members'}">4 members</span>
+		</li>
+	</ul>
+	<p class="empty-state" th:if="${groups.isEmpty()}">
+		You're not in any group yet. Create one below, or ask a friend for an invite link.
+	</p>
+
+	<section class="card">
+		<h2>Create group</h2>
+		<form th:action="@{/groups}" method="post" class="inline-form">
+			<label for="group-name" class="visually-hidden">Group name</label>
+			<input id="group-name" name="name" type="text" maxlength="80" required placeholder="e.g. Mountain Crew"
+				   th:value="${name}" th:attr="aria-invalid=${nameError != null ? 'true' : null}">
+			<button type="submit" class="button">Create group</button>
+		</form>
+		<p class="field-error" th:if="${nameError != null}" th:text="${nameError}">Please enter a name.</p>
+	</section>
 </main>
 </body>
 </html>

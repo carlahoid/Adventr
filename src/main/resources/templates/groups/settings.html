@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title th:text="${'Settings · ' + group.name + ' · Adventr'}">Settings · Mountain Crew · Adventr</title>
+</head>
+<body>
+<main class="container">
+	<div th:replace="~{fragments/flash :: flash}"></div>
+	<div class="page-heading">
+		<h1 th:text="${group.name}">Mountain Crew</h1>
+		<a th:href="@{/groups/{id}(id=${group.id})}">Back to adventures</a>
+	</div>
+
+	<section class="card" th:if="${group.owner}">
+		<h2>Group name</h2>
+		<form th:action="@{/groups/{id}/rename(id=${group.id})}" method="post" class="inline-form">
+			<label for="rename" class="visually-hidden">Group name</label>
+			<input id="rename" name="name" type="text" maxlength="80" required th:value="${group.name}">
+			<button type="submit" class="button">Rename</button>
+		</form>
+	</section>
+
+	<section class="card">
+		<h2 th:text="${'Members (' + members.size() + ')'}">Members (3)</h2>
+		<ul class="member-list">
+			<li th:each="m : ${members}">
+				<div>
+					<strong th:text="${m.displayName}">Alex</strong>
+					<span class="muted" th:if="${m.you}">(you)</span>
+					<span class="badge" th:if="${m.owner}">Owner</span>
+					<div class="muted" th:text="${'Joined ' + #temporals.format(m.joinedAt, 'd MMM yyyy')}">Joined 3 Oct 2026</div>
+				</div>
+				<div class="member-actions" th:if="${group.owner and !m.you}">
+					<form th:action="@{/groups/{g}/members/{u}/make-owner(g=${group.id},u=${m.userId})}" method="post"
+						  onsubmit="return confirm('Make this person the owner? You will become a regular member.')">
+						<button type="submit" class="link-button">Make owner</button>
+					</form>
+					<form th:action="@{/groups/{g}/members/{u}/remove(g=${group.id},u=${m.userId})}" method="post"
+						  onsubmit="return confirm('Remove this member from the group?')">
+						<button type="submit" class="link-button danger">Remove</button>
+					</form>
+				</div>
+			</li>
+		</ul>
+	</section>
+
+	<section class="card">
+		<h2>Leave group</h2>
+		<p class="muted" th:if="${group.owner and group.memberCount > 1}">
+			You're the owner. Make another member the owner before you leave.
+		</p>
+		<p class="muted" th:if="${group.owner and group.memberCount == 1}">
+			You're the only member. Leaving deletes the group and all of its adventures.
+		</p>
+		<form th:action="@{/groups/{id}/leave(id=${group.id})}" method="post"
+			  onsubmit="return confirm('Leave this group?')">
+			<button type="submit" class="button secondary">Leave group</button>
+		</form>
+	</section>
+
+	<section class="card danger-zone" th:if="${group.owner}">
+		<h2>Delete group</h2>
+		<p>This permanently deletes the group with all of its adventures, reactions, comments, and images.
+			Type the group name to confirm.</p>
+		<form th:action="@{/groups/{id}/delete(id=${group.id})}" method="post" class="inline-form">
+			<label for="confirm-name" class="visually-hidden">Group name</label>
+			<input id="confirm-name" name="confirmName" type="text" required autocomplete="off"
+				   th:placeholder="${group.name}">
+			<button type="submit" class="button danger">Delete group</button>
+		</form>
+	</section>
+</main>
+</body>
+</html>

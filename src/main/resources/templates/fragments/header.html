@@ -3,8 +3,19 @@
 <body>
 <header class="site-header" th:fragment="header">
 	<a class="brand" th:href="@{/}">Adventr</a>
-	<!--/* Group switcher slot: filled from the "switcherGroups" model attribute (task 4.5). */-->
-	<nav class="group-switcher" th:if="${switcherGroups != null}"></nav>
+	<!--/* Group switcher: a plain <details> menu of links, so it needs no JavaScript. */-->
+	<nav class="group-switcher" th:if="${switcherGroups != null and !switcherGroups.isEmpty()}" aria-label="Your groups">
+		<details>
+			<summary th:text="${currentGroup != null ? currentGroup.name : 'My groups'}">Mountain Crew</summary>
+			<ul>
+				<li th:each="g : ${switcherGroups}">
+					<a th:href="@{/groups/{id}(id=${g.id})}" th:text="${g.name}"
+					   th:attr="aria-current=${currentGroup != null and currentGroup.id == g.id ? 'page' : null}">Group</a>
+				</li>
+				<li class="switcher-all"><a th:href="@{/groups}">All groups</a></li>
+			</ul>
+		</details>
+	</nav>
 	<div class="account" th:if="${currentUser != null}">
 		<span class="account-name" th:text="${currentUser.displayName}">Anna</span>
 		<form th:action="@{/logout}" method="post">

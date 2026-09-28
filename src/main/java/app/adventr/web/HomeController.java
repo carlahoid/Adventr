@@ -19,13 +19,4 @@ public class HomeController {
 		return "landing";
 	}
 
-	/**
-	 * "My groups" landing page after login. Placeholder until the groups capability is built
-	 * (task 4.4).
-	 */
-	@GetMapping("/groups")
-	String myGroups() {
-		return "groups/my-groups";
-	}
-
 }

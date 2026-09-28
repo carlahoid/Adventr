@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* An author or reactor name, with the "(former member)" label. Use with an app.adventr.group.Author. */-->
+<span class="author" th:fragment="author(author)"><span th:text="${author.displayName}">Alex</span><span
+		class="former-member" th:if="${author.formerMember}"> (former member)</span></span>
+</body>
+</html>
