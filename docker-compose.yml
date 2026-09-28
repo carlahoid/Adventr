@@ -1,0 +1,124 @@
+# Production stack: Caddy (HTTPS) -> app + Keycloak (/auth) -> Postgres.
+#
+#   cp .env.example .env   # fill in every value
+#   docker compose up -d
+#
+# Only Caddy publishes ports (80/443). Postgres, Keycloak and the app are reachable only
+# inside the Compose network. All images are multi-arch (amd64 + arm64).
+name: adventr
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      # Used once by the init script to create the app and Keycloak databases.
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env}
+    volumes:
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    restart: unless-stopped
+    command: ["start", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      # Served under https://<APP_HOST>/auth behind Caddy, which terminates TLS.
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME: https://${APP_HOST:?set APP_HOST in .env}/auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      JAVA_OPTS_KC_HEAP: ${KEYCLOAK_JAVA_OPTS_HEAP:--Xms256m -Xmx768m}
+      # Placeholders in realm-adventr.json (only read on the first import of the realm).
+      APP_BASE_URL: https://${APP_HOST}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?set KEYCLOAK_CLIENT_SECRET in .env}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM: ${SMTP_FROM:-noreply@adventr.invalid}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - ./keycloak/realm-adventr.json:/opt/keycloak/data/import/realm-adventr.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The image has no curl; talk HTTP to the management port (9000) with bash.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'HTTP/1.1 200' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  app:
+    build: .
+    image: adventr-app:${APP_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/adventr
+      DB_USERNAME: adventr
+      DB_PASSWORD: ${APP_DB_PASSWORD}
+      KEYCLOAK_ISSUER_URI: https://${APP_HOST}/auth/realms/adventr
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      JAVA_OPTS: ${APP_JAVA_OPTS:--Xmx384m -XX:+ExitOnOutOfMemoryError}
+    volumes:
+      - images:/data/images
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      # OIDC discovery and token calls go to https://<APP_HOST>, which resolves to Caddy (see alias below).
+      caddy:
+        condition: service_started
+    healthcheck:
+      # Ubuntu's /bin/sh (dash) has no /dev/tcp, so run the probe with bash.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /actuator/health/readiness HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'HTTP/1.1 200' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  caddy:
+    image: caddy:2.11-alpine
+    restart: unless-stopped
+    environment:
+      APP_HOST: ${APP_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      default:
+        aliases:
+          # Containers reach the public hostname via Caddy directly, without hairpinning
+          # through the host's public IP.
+          - ${APP_HOST}
+
+volumes:
+  pgdata:
+  images:
+  caddy_data:
+  caddy_config:
+  backups:

@@ -1,0 +1,73 @@
+# Local development: Postgres and Keycloak in Docker, the app runs from the IDE / ./mvnw
+# with the "dev" profile. All credentials here are throwaway dev-only values.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+#
+# App: http://localhost:8080   Keycloak admin: http://localhost:8081/auth/admin (admin / admin)
+# Mail (password reset): http://localhost:8025
+name: adventr-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-dev
+      APP_DB_PASSWORD: adventr-dev
+      KEYCLOAK_DB_PASSWORD: keycloak-dev
+    volumes:
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - pgdata-dev:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak-dev
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_PORT: "8081"
+      KC_HOSTNAME: http://localhost:8081/auth
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Placeholders in realm-adventr.json
+      APP_BASE_URL: http://localhost:8080
+      KEYCLOAK_CLIENT_SECRET: adventr-dev-client-secret
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: noreply@adventr.localhost
+      SMTP_AUTH: "false"
+      SMTP_STARTTLS: "false"
+    volumes:
+      - ./keycloak/realm-adventr.json:/opt/keycloak/data/import/realm-adventr.json:ro
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'HTTP/1.1 200' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # Catches Keycloak's password-reset emails: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.29
+    ports:
+      - "127.0.0.1:8025:8025"
+
+volumes:
+  pgdata-dev:

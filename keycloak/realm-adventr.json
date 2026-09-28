@@ -1,0 +1,69 @@
+{
+  "realm": "adventr",
+  "displayName": "Adventr",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "rememberMe": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "passwordPolicy": "length(8) and notUsername",
+  "smtpServer": {
+    "host": "${SMTP_HOST:localhost}",
+    "port": "${SMTP_PORT:587}",
+    "from": "${SMTP_FROM:noreply@adventr.invalid}",
+    "fromDisplayName": "Adventr",
+    "auth": "${SMTP_AUTH:true}",
+    "user": "${SMTP_USER:}",
+    "password": "${SMTP_PASSWORD:}",
+    "starttls": "${SMTP_STARTTLS:true}",
+    "ssl": "false"
+  },
+  "clients": [
+    {
+      "clientId": "adventr-app",
+      "name": "Adventr",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "rootUrl": "${APP_BASE_URL}",
+      "baseUrl": "${APP_BASE_URL}/",
+      "redirectUris": ["${APP_BASE_URL}/*"],
+      "webOrigins": ["${APP_BASE_URL}"],
+      "attributes": {
+        "post.logout.redirect.uris": "${APP_BASE_URL}/*",
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "organization", "microprofile-jwt"]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "google",
+      "displayName": "Google",
+      "providerId": "google",
+      "enabled": false,
+      "trustEmail": true,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "${GOOGLE_CLIENT_ID:}",
+        "clientSecret": "${GOOGLE_CLIENT_SECRET:}",
+        "syncMode": "IMPORT",
+        "defaultScope": "openid profile email"
+      }
+    }
+  ]
+}

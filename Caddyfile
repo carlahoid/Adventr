@@ -1,0 +1,23 @@
+# Automatic HTTPS for APP_HOST; plain HTTP is redirected to HTTPS.
+# Caddy adds X-Forwarded-For/-Proto/-Host, which both the app and Keycloak trust.
+{$APP_HOST} {
+	encode zstd gzip
+
+	# Actuator is for Docker health checks only. (handle blocks are exclusive and tried in
+	# order, so this must come first.)
+	@actuator path /actuator /actuator/*
+	handle @actuator {
+		respond 404
+	}
+
+	@keycloak path /auth /auth/*
+	handle @keycloak {
+		reverse_proxy keycloak:8080
+	}
+
+	# Everything else, including uploaded images (served by the app behind the membership
+	# check), goes to the app. Caddy never serves files from disk.
+	handle {
+		reverse_proxy app:8080
+	}
+}
