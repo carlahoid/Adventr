@@ -27,25 +27,25 @@
 
 ## 4. Groups, memberships, and central authorization (groups)
 
-- [ ] 4.1 Flyway `V2`: `groups` and `memberships` (role, `joined_at`, `left_at`, unique `(group_id, user_id)`)
-- [ ] 4.2 Implement `GroupAccessService.requireMember` / `requireOwner` and map `GroupAccessDeniedException` to 404 and `ForbiddenActionException` to 403
-- [ ] 4.3 Add an ArchUnit/convention test ensuring that group-scoped services use the guard and that controllers do not access repositories directly
-- [ ] 4.4 Build the create-group flow (name 1–80 characters, creator becomes the Owner) and the "My groups" landing page with an empty state
-- [ ] 4.5 Build the header group switcher (a model attribute listing the user's active groups)
-- [ ] 4.6 Build the group settings page: member list with roles and join dates, and owner-only rename
-- [ ] 4.7 Implement leave group (Member leaves, Owner blocked while others remain, sole Owner leaving deletes the group) and remove member (Owner only)
-- [ ] 4.8 Implement ownership transfer and delete group (confirmation by typing the name, cascade including image files)
-- [ ] 4.9 Implement the automatic owner promotion service for account deletion (longest-standing member, or delete the group)
-- [ ] 4.10 Add the "former member" label helper used by all author and reactor displays
-- [ ] 4.11 Tests: non-member gets 404, former member gets 404, Member→owner action gets 403, and the leave/transfer/delete rules
+- [x] 4.1 Flyway `V2`: `groups` and `memberships` (role, `joined_at`, `left_at`, unique `(group_id, user_id)`)
+- [x] 4.2 Implement `GroupAccessService.requireMember` / `requireOwner` and map `GroupAccessDeniedException` to 404 and `ForbiddenActionException` to 403
+- [x] 4.3 Add an ArchUnit/convention test ensuring that group-scoped services use the guard and that controllers do not access repositories directly
+- [x] 4.4 Build the create-group flow (name 1–80 characters, creator becomes the Owner) and the "My groups" landing page with an empty state
+- [x] 4.5 Build the header group switcher (a model attribute listing the user's active groups)
+- [x] 4.6 Build the group settings page: member list with roles and join dates, and owner-only rename
+- [x] 4.7 Implement leave group (Member leaves, Owner blocked while others remain, sole Owner leaving deletes the group) and remove member (Owner only)
+- [x] 4.8 Implement ownership transfer and delete group (confirmation by typing the name, cascade including image files)
+- [x] 4.9 Implement the automatic owner promotion service for account deletion (longest-standing member, or delete the group)
+- [x] 4.10 Add the "former member" label helper used by all author and reactor displays
+- [x] 4.11 Tests: non-member gets 404, former member gets 404, Member→owner action gets 403, and the leave/transfer/delete rules
 
 ## 5. Invites (invites)
 
-- [ ] 5.1 Flyway `V3`: `invites` (unique `group_id`, unique `token`, `expires_at`, `created_by`)
-- [ ] 5.2 Implement generate/regenerate (32-byte `SecureRandom`, base64url, 7-day expiry, replace the existing row), owner only
-- [ ] 5.3 Show the invite link with a copy button and expiry on the settings page for all members
-- [ ] 5.4 Build `/join/{token}`: authentication required, then the join landing page (group name, "Join" button) with valid, expired, invalid, already-member, and rejoin handling
-- [ ] 5.5 Tests: reuse by several users, old token invalid after regenerate, expired token, and a new-user registration round trip (Testcontainers Keycloak)
+- [x] 5.1 Flyway `V3`: `invites` (unique `group_id`, unique `token`, `expires_at`, `created_by`)
+- [x] 5.2 Implement generate/regenerate (32-byte `SecureRandom`, base64url, 7-day expiry, replace the existing row), owner only
+- [x] 5.3 Show the invite link with a copy button and expiry on the settings page for all members
+- [x] 5.4 Build `/join/{token}`: authentication required, then the join landing page (group name, "Join" button) with valid, expired, invalid, already-member, and rejoin handling
+- [x] 5.5 Tests: reuse by several users, old token invalid after regenerate, expired token, and a new-user registration round trip (Testcontainers Keycloak)
 
 ## 6. Adventures (adventures)
 
