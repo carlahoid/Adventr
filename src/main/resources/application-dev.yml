@@ -1,0 +1,13 @@
+# Local development against docker-compose.dev.yml (Postgres on :5432, Keycloak on :8081/auth).
+# These are throwaway dev-only credentials; production values come from .env.
+spring:
+  datasource:
+    password: ${DB_PASSWORD:adventr-dev}
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:adventr-dev-client-secret}
+  thymeleaf:
+    cache: false
