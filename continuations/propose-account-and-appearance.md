@@ -10,7 +10,6 @@ The repo is `/Users/carla/Documents/Adventr`.
 |---|---|
 | `openspec/changes/add-friend-adventures-mvp/` | The active MVP change: `proposal.md`, `design.md` (read its **Implementation Notes** at the end), `specs/<capability>/spec.md` for user-auth, groups, invites, adventures, reactions, comments, and deployment, and `tasks.md` |
 | `openspec/prompts.md` | The generic feature prompt. It was written for an unknown codebase, so treat it as **raw input only**. This prompt supersedes it wherever they differ |
-| `openspec/todo.md` | My original todo notes |
 | `continuations/` | Earlier continuation prompts. Background only |
 
 **Start by reading** the MVP `design.md` and the `user-auth` spec, then look at `src/main/resources/static/css/app.css`, `templates/layout.html`, `templates/fragments/header.html`, `web/LayoutModelAdvice.java`, `user/UserProvisioningOidcUserService.java`, and `db/migration/V1__users.sql`. Then **run `/opsx:propose`** to create the change.
