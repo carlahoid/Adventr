@@ -139,7 +139,7 @@ Rollback means redeploying the previous app image tag. Flyway migrations are for
 
 ## Open Questions
 
-- Google login: include it in the first deploy, or add it later? The realm config supports both. It is off by default until a Google OAuth client is created.
+- ~~Google login: include it in the first deploy, or add it later?~~ **Resolved (2026-09-28):** Enable it at the first deploy (task 9.9). It needs a real hostname for the redirect URI, and it makes joining via an invite link easier for friends who don't want another password. It needs no app code.
 - Which off-host backup target to use: Oracle Object Storage or Google Drive via `rclone`. This can be decided at deploy time.
 
 ## Implementation Notes

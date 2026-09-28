@@ -85,3 +85,4 @@
 - [ ] 9.6 Configure the SMTP relay in `.env` and verify the password-reset email end to end
 - [ ] 9.7 Run the production smoke test: register, create a group, invite a second account, join, add an adventure with an image, react, comment, and log out, then check that only 80/443 are exposed
 - [ ] 9.8 Check the 24-hour memory stability of the stack on the target host and tune the JVM heap limits if needed
+- [ ] 9.9 Enable Google login: create a Google Cloud OAuth client with the redirect URI `https://<APP_HOST>/auth/realms/adventr/broker/google/endpoint`, put `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` in `.env`, set the `google` IdP to enabled (realm file and admin console, since the realm import runs only once), publish the consent screen (basic `openid email profile` scopes need no Google review), document the steps in `docs/deploy-oracle.md`, and smoke test a Google login plus account linking for an email that already has a password account
