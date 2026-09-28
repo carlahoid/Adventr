@@ -45,6 +45,38 @@
 	</section>
 
 	<section class="card">
+		<h2>Invite friends</h2>
+		<th:block th:if="${invite != null and !invite.expired}">
+			<p>Share this link with friends you want in the group. Anyone with the link can join until it expires.</p>
+			<div class="inline-form">
+				<label for="invite-link" class="visually-hidden">Invite link</label>
+				<input id="invite-link" type="text" readonly th:value="${inviteUrl}" onfocus="this.select()">
+				<button type="button" class="button secondary"
+						onclick="navigator.clipboard.writeText(document.getElementById('invite-link').value).then(() => this.textContent = 'Copied!')">
+					Copy link
+				</button>
+			</div>
+			<p class="muted" th:text="${'Expires ' + #temporals.format(invite.expiresAt, 'd MMM yyyy, HH:mm')}">Expires 5 Oct 2026, 14:03</p>
+		</th:block>
+		<p class="muted" th:if="${invite != null and invite.expired}">
+			The invite link has expired.<th:block th:unless="${group.owner}"> Ask the owner for a new one.</th:block>
+		</p>
+		<p class="muted" th:if="${invite == null}">
+			There's no invite link yet.<th:block th:unless="${group.owner}"> Ask the owner to create one.</th:block>
+		</p>
+		<th:block th:if="${group.owner}">
+			<form th:if="${invite != null and !invite.expired}" th:action="@{/groups/{id}/invite(id=${group.id})}"
+				  method="post" onsubmit="return confirm('Create a new link? The current link will stop working.')">
+				<button type="submit" class="button secondary">Create new link</button>
+			</form>
+			<form th:unless="${invite != null and !invite.expired}" th:action="@{/groups/{id}/invite(id=${group.id})}"
+				  method="post">
+				<button type="submit" class="button">Create invite link</button>
+			</form>
+		</th:block>
+	</section>
+
+	<section class="card">
 		<h2>Leave group</h2>
 		<p class="muted" th:if="${group.owner and group.memberCount > 1}">
 			You're the owner. Make another member the owner before you leave.

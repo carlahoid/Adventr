@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title>Join a group · Adventr</title>
+</head>
+<body>
+<main class="container" th:switch="${preview.status.name()}">
+	<th:block th:case="'INVALID'">
+		<h1>Invite link not valid</h1>
+		<p>This invite link is no longer valid. Ask the group for the current link.</p>
+		<a th:href="@{/groups}">Go to my groups</a>
+	</th:block>
+	<th:block th:case="'EXPIRED'">
+		<h1>Invite link expired</h1>
+		<p>This invite link has expired, ask the group for a new one.</p>
+		<a th:href="@{/groups}">Go to my groups</a>
+	</th:block>
+	<th:block th:case="*">
+		<p class="muted">You've been invited to join</p>
+		<h1 th:text="${preview.groupName}">Mountain Crew</h1>
+		<p th:if="${preview.status.name() == 'CAN_REJOIN'}">You were a member before. Join again?</p>
+		<form id="join-form" th:action="@{/join/{token}(token=${token})}" method="post">
+			<button type="submit" class="button">Join group</button>
+		</form>
+	</th:block>
+</main>
+</body>
+</html>

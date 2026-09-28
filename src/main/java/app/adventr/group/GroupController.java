@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import app.adventr.invite.InviteLinks;
+import app.adventr.invite.InviteService;
 import app.adventr.user.CurrentUser;
 
 /**
@@ -22,8 +24,11 @@ class GroupController {
 
 	private final GroupService groups;
 
-	GroupController(GroupService groups) {
+	private final InviteService invites;
+
+	GroupController(GroupService groups, InviteService invites) {
 		this.groups = groups;
+		this.invites = invites;
 	}
 
 	@GetMapping
@@ -58,6 +63,10 @@ class GroupController {
 	String settings(@PathVariable long groupId, CurrentUser currentUser, Model model) {
 		model.addAttribute("group", this.groups.view(currentUser.id(), groupId));
 		model.addAttribute("members", this.groups.members(currentUser.id(), groupId));
+		this.invites.current(currentUser.id(), groupId).ifPresent((invite) -> {
+			model.addAttribute("invite", invite);
+			model.addAttribute("inviteUrl", InviteLinks.url(invite.token()));
+		});
 		return "groups/settings";
 	}
 
