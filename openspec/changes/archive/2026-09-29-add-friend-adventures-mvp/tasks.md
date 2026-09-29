@@ -49,39 +49,39 @@
 
 ## 6. Adventures (adventures)
 
-- [ ] 6.1 Flyway `V4`: `adventures` with all fields, `status`, `status_changed_at`, and indexes on `(group_id, status)`
-- [ ] 6.2 Implement `AdventureService` (create, update, delete, change status) with the guard, group-scoped lookups, and creator/owner permission rules
-- [ ] 6.3 Add validation: title 1–120 characters, field lengths, `date_to ≥ date_from`, `link` restricted to http/https, `cost_amount ≥ 0`
-- [ ] 6.4 Write the list query: one aggregate query returning up/down counts, net score, comment count, and the current user's reaction, plus the section split and ordering
-- [ ] 6.5 Build the adventure list page (Planned / Ideas / Memories sections, empty state) with the htmx quick-add form (title only)
-- [ ] 6.6 Build the adventure detail page (set fields only, creator, status control, edit/delete for permitted users) and the full edit form
-- [ ] 6.7 Implement the image upload pipeline: 10 MB limit, magic-byte check (JPEG/PNG/WebP), EXIF orientation, metadata stripping, resize to 1600 px max, JPEG re-encode, storage under `/data/images/{groupId}/{uuid}.jpg`, and old-file deletion on replace/remove/delete
-- [ ] 6.8 Add the protected image endpoint `GET /groups/{gid}/adventures/{aid}/image` behind the guard with `Cache-Control: private`, plus list thumbnails
-- [ ] 6.9 Tests: ordering scenarios, status change by a non-creator, a non-creator edit returning 403, XSS escaping, image rejection cases, and a non-member image request returning 404
+- [x] 6.1 Flyway `V4`: `adventures` with all fields, `status`, `status_changed_at`, and indexes on `(group_id, status)`
+- [x] 6.2 Implement `AdventureService` (create, update, delete, change status) with the guard, group-scoped lookups, and creator/owner permission rules
+- [x] 6.3 Add validation: title 1–120 characters, field lengths, `date_to ≥ date_from`, `link` restricted to http/https, `cost_amount ≥ 0`
+- [x] 6.4 Write the list query: one aggregate query returning up/down counts, net score, comment count, and the current user's reaction, plus the section split and ordering
+- [x] 6.5 Build the adventure list page (Planned / Ideas / Memories sections, empty state) with the htmx quick-add form (title only)
+- [x] 6.6 Build the adventure detail page (set fields only, creator, status control, edit/delete for permitted users) and the full edit form
+- [x] 6.7 Implement the image upload pipeline: 10 MB limit, magic-byte check (JPEG/PNG/WebP), EXIF orientation, metadata stripping, resize to 1600 px max, JPEG re-encode, storage under `/data/images/{groupId}/{uuid}.jpg`, and old-file deletion on replace/remove/delete
+- [x] 6.8 Add the protected image endpoint `GET /groups/{gid}/adventures/{aid}/image` behind the guard with `Cache-Control: private`, plus list thumbnails
+- [x] 6.9 Tests: ordering scenarios, status change by a non-creator, a non-creator edit returning 403, XSS escaping, image rejection cases, and a non-member image request returning 404
 
 ## 7. Reactions (reactions)
 
-- [ ] 7.1 Flyway `V5`: `reactions` with primary key `(adventure_id, user_id)`
-- [ ] 7.2 Implement `ReactionService.toggle` (insert/update/delete per the toggle table, retrying once on a constraint violation)
-- [ ] 7.3 Build the reaction-bar Thymeleaf fragment (counts, own-state highlight, reactor names as a tooltip) and an htmx POST endpoint returning the fragment, with a non-JS redirect fallback
-- [ ] 7.4 Show the reactor name lists (👍/👎) on the detail page, including the "former member" label
-- [ ] 7.5 Tests: all six toggle transitions, concurrent double-click uniqueness, and net-score ordering in the list
+- [x] 7.1 Flyway `V5`: `reactions` with primary key `(adventure_id, user_id)`
+- [x] 7.2 Implement `ReactionService.toggle` (insert/update/delete per the toggle table, retrying once on a constraint violation)
+- [x] 7.3 Build the reaction-bar Thymeleaf fragment (counts, own-state highlight, reactor names as a tooltip) and an htmx POST endpoint returning the fragment, with a non-JS redirect fallback
+- [x] 7.4 Show the reactor name lists (👍/👎) on the detail page, including the "former member" label
+- [x] 7.5 Tests: all six toggle transitions, concurrent double-click uniqueness, and net-score ordering in the list
 
 ## 8. Comments (comments)
 
-- [ ] 8.1 Flyway `V6`: `comments` (`adventure_id`, `author_id`, `text`, `created_at`, `edited_at`)
-- [ ] 8.2 Implement `CommentService` (post, edit by author only, delete by author or owner) with the guard and validation (1–2000 characters)
-- [ ] 8.3 Build the comment thread fragment (oldest first, line breaks preserved, "(edited)" marker, "former member" label) with htmx post/edit/delete swaps
-- [ ] 8.4 Show the comment count in the list
-- [ ] 8.5 Tests: ordering, an owner edit returning 403, owner delete allowed, and a member deleting another's comment returning 403
+- [x] 8.1 Flyway `V6`: `comments` (`adventure_id`, `author_id`, `text`, `created_at`, `edited_at`)
+- [x] 8.2 Implement `CommentService` (post, edit by author only, delete by author or owner) with the guard and validation (1–2000 characters)
+- [x] 8.3 Build the comment thread fragment (oldest first, line breaks preserved, "(edited)" marker, "former member" label) with htmx post/edit/delete swaps
+- [x] 8.4 Show the comment count in the list
+- [x] 8.5 Tests: ordering, an owner edit returning 403, owner delete allowed, and a member deleting another's comment returning 403
 
 ## 9. Deployment, backups, and go-live (deployment)
 
-- [ ] 9.1 Add a `backup` service or host cron script: nightly `pg_dump` of both databases plus a tar of the images volume, rotation (7 daily, 4 weekly), and an `rclone` copy to a free off-host remote
+- [x] 9.1 Add a `backup` service or host cron script: nightly `pg_dump` of both databases plus a tar of the images volume, rotation (7 daily, 4 weekly), and an `rclone` copy to a free off-host remote
 - [ ] 9.2 Write `docs/restore.md` and perform one test restore on a fresh machine
-- [ ] 9.3 Add `docker-compose.tunnel.yml` (the Pi variant): a `cloudflared` service, with Caddy running without public ports or removed
-- [ ] 9.4 Write `docs/deploy-oracle.md`: account and PAYG upgrade to avoid idle reclamation, ARM VM provisioning, firewall/security list for 80/443, Docker install, DuckDNS updater, `.env`, and `compose up`
-- [ ] 9.5 Write `docs/deploy-pi.md`: OS, Docker, Cloudflare Tunnel setup, and `compose -f ... -f docker-compose.tunnel.yml up`
+- [x] 9.3 Add `docker-compose.tunnel.yml` (the Pi variant): a `cloudflared` service, with Caddy running without public ports or removed
+- [x] 9.4 Write `docs/deploy-oracle.md`: account and PAYG upgrade to avoid idle reclamation, ARM VM provisioning, firewall/security list for 80/443, Docker install, DuckDNS updater, `.env`, and `compose up`
+- [x] 9.5 Write `docs/deploy-pi.md`: OS, Docker, Cloudflare Tunnel setup, and `compose -f ... -f docker-compose.tunnel.yml up`
 - [ ] 9.6 Configure the SMTP relay in `.env` and verify the password-reset email end to end
 - [ ] 9.7 Run the production smoke test: register, create a group, invite a second account, join, add an adventure with an image, react, comment, and log out, then check that only 80/443 are exposed
 - [ ] 9.8 Check the 24-hour memory stability of the stack on the target host and tune the JVM heap limits if needed
