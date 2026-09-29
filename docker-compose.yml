@@ -96,6 +96,28 @@ services:
       retries: 12
       start_period: 30s
 
+  # Nightly pg_dump of both databases plus the images volume into the backups volume, with
+  # rotation and an off-host copy via rclone (see docs/restore.md).
+  backup:
+    build: ./backup
+    image: adventr-backup:${APP_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_TIME: ${BACKUP_TIME:-03:30}
+      BACKUP_RCLONE_REMOTE: ${BACKUP_RCLONE_REMOTE:-}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - images:/data/images:ro
+      - backups:/backups
+      # rclone.conf with the remote's credentials; created by "docker compose run --rm backup rclone config".
+      - ./backup/rclone:/config/rclone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   caddy:
     image: caddy:2.11-alpine
     restart: unless-stopped

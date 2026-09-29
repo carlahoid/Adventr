@@ -1,0 +1,4 @@
+# rclone.conf holds the credentials of the off-host remote; create it with
+#   docker compose run --rm backup rclone config
+*
+!.gitignore

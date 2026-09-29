@@ -1,0 +1,35 @@
+# Caddy behind a Cloudflare Tunnel (docker-compose.tunnel.yml). Cloudflare terminates TLS and
+# cloudflared forwards plain HTTP to Caddy, which is reachable only inside the Compose network.
+# Keep the routes in sync with Caddyfile.
+{
+	# No certificates to obtain: nothing reaches this Caddy from outside.
+	auto_https off
+	servers {
+		# cloudflared (a private address in the Compose network) passes on the visitor's
+		# X-Forwarded-For, which Keycloak's brute-force protection and the logs should see.
+		trusted_proxies static private_ranges
+	}
+}
+
+http://{$APP_HOST} {
+	encode zstd gzip
+
+	@actuator path /actuator /actuator/*
+	handle @actuator {
+		respond 404
+	}
+
+	# Visitors always use https at Cloudflare, so the app and Keycloak must build https URLs.
+	@keycloak path /auth /auth/*
+	handle @keycloak {
+		reverse_proxy keycloak:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		reverse_proxy app:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+}

@@ -1,0 +1,32 @@
+# Raspberry Pi variant: no open inbound ports. A Cloudflare Tunnel terminates TLS at Cloudflare
+# and forwards to Caddy over an outbound connection (see docs/deploy-pi.md).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
+#
+# In the Cloudflare dashboard, the tunnel's public hostname APP_HOST points to http://caddy:80.
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      caddy:
+        condition: service_started
+
+  caddy:
+    # Nothing published: the host needs no port forwarding or open firewall ports.
+    ports: !reset []
+    volumes: !override
+      - ./Caddyfile.tunnel:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    # No APP_HOST alias: Caddy serves no TLS here, so the app's server-side calls to
+    # https://<APP_HOST>/auth (OIDC discovery, tokens) go out through Cloudflare instead.
+    networks: !reset {}
+
+  app:
+    depends_on:
+      cloudflared:
+        condition: service_started
