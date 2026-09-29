@@ -19,11 +19,12 @@ Spring Boot 4 (Java 21) · Thymeleaf + htmx · PostgreSQL · Keycloak · Docker 
 | Private groups with Owner and Member roles, group switcher, and settings | ✅ Done |
 | Leaving, removing members, ownership transfer, and deleting a group | ✅ Done |
 | Reusable, expiring invite links (`/join/{token}`) that the owner can regenerate | ✅ Done |
-| Adventures: list, detail page, IDEA → PLANNED → DONE status, and one image | 🚧 Planned (MVP task group 6) |
-| 👍/👎 reactions with counts, sorted by net score | 🚧 Planned (MVP task group 7) |
-| Comment thread per adventure | 🚧 Planned (MVP task group 8) |
-| Deployment guides, nightly backups, and Google login | 🚧 Planned (MVP task group 9) |
-| My account page: display name, bio, avatar, light/dark theme, and primary color | 📝 Proposed (after go-live) |
+| Adventures: list with quick add, detail page, IDEA → PLANNED → DONE status, and one image | ✅ Done |
+| 👍/👎 reactions with counts and names, sorted by net score | ✅ Done |
+| Comment thread per adventure | ✅ Done |
+| Nightly off-host backups, deployment guides (Oracle VM, Raspberry Pi + Cloudflare Tunnel) | ✅ Done |
+| Go-live: SMTP, Google login, production smoke test, and a tested restore | 🚧 Operator tasks (MVP 9.2, 9.6–9.9) |
+| My account page: display name, bio, avatar, light/dark theme, and primary color | ✅ Done (browser accessibility walkthrough pending) |
 
 Groups are always private. The only way into a group is an invite link, and every
 group-scoped request goes through one central membership check in the service layer.
@@ -59,7 +60,7 @@ group-scoped request goes through one central membership check in the service la
 
 | Path | What it holds |
 |---|---|
-| `src/main/java/app/adventr/` | The app, one package per capability: `config`, `user`, `group`, `invite`, `web` |
+| `src/main/java/app/adventr/` | The app, one package per capability: `config`, `user`, `group`, `invite`, `adventure` (with reactions and comments), `image`, `account`, `web` |
 | `src/main/resources/templates/` | Thymeleaf pages and fragments (`layout.html` is the base layout) |
 | `src/main/resources/db/migration/` | Flyway migrations (`V1__users.sql`, …) |
 | `src/main/resources/static/css/app.css` | The stylesheet |
@@ -67,6 +68,9 @@ group-scoped request goes through one central membership check in the service la
 | `keycloak/realm-adventr.json` | The Keycloak realm, imported on the first start |
 | `postgres/init-databases.sh` | Creates the `adventr` and `keycloak` databases and users |
 | `docker-compose.yml`, `Caddyfile`, `Dockerfile` | The production stack |
+| `docker-compose.tunnel.yml`, `Caddyfile.tunnel` | The Raspberry Pi variant behind a Cloudflare Tunnel |
+| `backup/` | The nightly backup service (`pg_dump`, images archive, rclone) |
+| `docs/` | Deployment guides, the restore procedure, and the accessibility audit |
 | `docker-compose.dev.yml` | The local dev stack (Postgres, Keycloak, Mailpit) |
 | `openspec/` | Specifications and change proposals (see [Specs](#specs)) |
 
@@ -119,9 +123,15 @@ guard, and controllers must not use repositories directly.
 
 ## Production
 
-The production stack is `docker-compose.yml`: Caddy, the app, Keycloak, and Postgres. It
-targets a single free VM (Oracle Cloud Always Free, ARM) or a Raspberry Pi. All images are
-multi-arch (amd64 and arm64).
+The production stack is `docker-compose.yml`: Caddy, the app, Keycloak, Postgres, and a
+nightly backup service. It targets a single free VM (Oracle Cloud Always Free, ARM) or a
+Raspberry Pi. All images are multi-arch (amd64 and arm64). Step-by-step guides:
+
+- [docs/deploy-oracle.md](docs/deploy-oracle.md): Oracle Cloud VM with DuckDNS, including SMTP, Google login, and go-live checks
+- [docs/deploy-pi.md](docs/deploy-pi.md): Raspberry Pi behind a Cloudflare Tunnel (`docker-compose.tunnel.yml`)
+- [docs/restore.md](docs/restore.md): backups, the off-host copy, and restoring on a new host
+
+In short:
 
 1. Point a hostname at the server, e.g. a free DuckDNS subdomain, and open ports 80 and 443.
 2. Copy the environment template and fill in every value:
@@ -158,7 +168,9 @@ All settings live in `.env`. **Never commit `.env`**; it is ignored by Git.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google login (see below) |
 | `APP_VERSION` | Image tag for the app service |
 | `APP_JAVA_OPTS` | JVM options for the app |
-| `BACKUP_RCLONE_REMOTE` | Off-host backup target (planned, not used yet) |
+| `BACKUP_TIME`, `TZ` | Time of the nightly backup (`HH:MM`) and its time zone |
+| `BACKUP_RCLONE_REMOTE` | rclone remote for the off-host backup copy (see [docs/restore.md](docs/restore.md)) |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Raspberry Pi variant only: the Cloudflare Tunnel token |
 
 Generate secrets with e.g. `openssl rand -base64 32 | tr -d '/+=' | cut -c1-32`.
 
@@ -182,12 +194,14 @@ Google login is free and needs no app code.
 
 ## Specs
 
-The project is specified with [OpenSpec](https://github.com/Fission-AI/OpenSpec). Each change
-has a proposal, a design, specs with WHEN/THEN scenarios, and a task list:
+The project is specified with [OpenSpec](https://github.com/Fission-AI/OpenSpec). The current
+requirements, with WHEN/THEN scenarios, live in `openspec/specs/` (one folder per capability:
+`user-auth`, `groups`, `invites`, `adventures`, `reactions`, `comments`, `deployment`). Each change
+has a proposal, a design, delta specs, and a task list:
 
 | Change | What it covers |
 |---|---|
-| `openspec/changes/add-friend-adventures-mvp/` | The MVP: auth, groups, invites, adventures, reactions, comments, and deployment |
+| `openspec/changes/archive/2026-09-29-add-friend-adventures-mvp/` | The MVP (archived): auth, groups, invites, adventures, reactions, comments, and deployment. Go-live tasks 9.2 and 9.6–9.9 remain for the operator. |
 | `openspec/changes/account-and-appearance/` | Follow-up: My account page, avatar, themes, primary color, and a contrast audit |
 
 Small implementation decisions are recorded under "Implementation Notes" in each change's

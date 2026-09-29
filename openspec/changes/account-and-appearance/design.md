@@ -168,3 +168,44 @@ Each token has a light and a dark value.
 
 - **Default theme for existing users:** System (as planned), or Light to avoid surprising existing dark-OS users with the new dark theme on release day? The default is System, and this can be confirmed at implementation.
 - **Exact preset hues:** Final hex values are chosen during implementation against the finished dark palette and verified by `AccentColorsTests`.
+
+## Implementation Notes
+
+Small decisions and deviations made during implementation.
+
+- **Preconditions.** The MVP was archived on 2026-09-29, with go-live tasks 9.2 and 9.6–9.9 still open for the operator. Its last migration is V6, so this change uses `V7__account_and_appearance.sql`. The MVP's image processing (`app.adventr.image.ImageProcessor`) was already separate from adventure storage. It gained `toSquareJpeg(bytes, size)`, which crops the largest centered square after applying the EXIF orientation and scales to exactly `size` × `size`, upscaling small images.
+- **Presets vs. the dark theme.**
+  - No single color reaches 4.5:1 against both the light page (`#faf8f5`) and the dark card (`#1f2226`): it would need a relative luminance of at most 0.17 and at least 0.25 at once. Every color, presets included, therefore gets a lighter text/link variant in dark mode.
+  - "No or only minimal adjustment" for presets is tested as follows: no change at all in light mode. In dark mode, the variants keep the hue (within 10° in OKLCH) and at least 80% of the chroma.
+  - The "Adjusted for readability" note is shown **per theme**. It appears when that theme's fill or text variant differs from the pick by more than 0.04 in OKLab. So the default green shows it in the dark panel only, `#ffff00` in the light panel, and `#0a0a40` in the dark panel.
+- **Presets.** Green `#1f7a5c` (default), Teal `#0f766e`, Blue `#1d4ed8`, Indigo `#4f46e5`, Purple `#7c3aed`, Rose `#be185d`, Red `#c0262d`, Orange `#c2410c`. Choosing the default color stores `null`, so it follows any later change of the default. Any other pick is stored exactly as chosen (lower-cased).
+- **Derivation details.**
+  - The search steps OKLCH lightness by 0.005. For each candidate it keeps as much of the original chroma as fits in sRGB (binary search).
+  - Thresholds are checked on the rounded hex value, so the stored and served colors are exactly the tested ones.
+  - `accent-fg` is black or white, whichever contrasts more. For any fill, the better of the two reaches at least 4.58:1, so the fill never has to move for the sake of its text color.
+- **Tokens.**
+  - Light `--muted` changed from `#656d76` to `#5f6670`, so it also reaches 4.5:1 on `--surface-2`.
+  - The badge and own-reaction tint was a fixed light green. They now use the neutral `--surface-2` with a border, which is correct with any accent.
+  - `--shadow` is a token too.
+  - The stylesheet's `--accent-*-l/-d` defaults are exactly `AccentColors.derive(default)`, which a test asserts. `AccentColors.LIGHT/DARK` (`bg`, `surface`, `fg`) must equal the CSS tokens, which a test also asserts.
+- **Current user carries appearance.** `CurrentUser` now holds the avatar version, theme, and stored color, and the login upsert returns them too. `LayoutModelAdvice` builds `appearance` without an extra query. Logged-out pages and error pages rendered without a principal get `Appearance.DEFAULT`. Without the attribute (bare htmx fragments), the stylesheet defaults apply.
+- **Name sync.** Saving the profile marks the name custom only if it actually changed, so saving just a bio keeps a Keycloak-synced name in sync. The name counts code points, so an emoji counts as one character, and rejects control characters (`\p{Cc}`). The bio turns any run of control characters, including line breaks, into one space.
+- **Avatars.**
+  - Stored at `avatars/{userId}/{uuid}.jpg` through the shared `ImageStore`, which removes the file on rollback and deletes after commit.
+  - A missing avatar answers the same 404 as a denied one.
+  - `Author.showsAvatar()` is false for former members, so their old content shows initials even if they still share a different group with the viewer.
+  - Initials are the first letters of the first and last word.
+  - The avatar image uses `alt=""` and the initials `aria-hidden="true"`, because the name is always shown next to them.
+  - The author name span got the class `author-name`.
+- **`requireSharedGroup`** is one JPQL `count(…) > 0` over two active memberships. For "no access" it throws `GroupAccessDeniedException(String)`, a new constructor, mapped to 404 like every other denial.
+- **Appearance form.** Presets and a "Custom" option share the `color` radio group. The native color picker is named `customColor`, and moving it checks "Custom" via a one-line `oninput`, the same kind of inline handler the settings page already uses for `confirm()`. The htmx preview listens on the color fieldset (`input delay:150ms, change`) and includes the whole form.
+  - The preview panels get their theme's colors as `--p-*` custom properties in an inline style, built from computed hex values only. Invalid input derives nothing and shows a message.
+  - Save and reset are two submit buttons of one form (`action=reset-color`).
+- **Header.** The name links to `/account`. Thymeleaf 3.1 has no `#httpServletRequest`, so the link has no `aria-current` on the account page.
+- **Audit (group 7).** `docs/accessibility.md` holds the checklist, the automated guards, and the fixes found in the code review:
+  - Border-strong inputs, a global focus ring, and non-color hover states.
+  - ✓/⚠ prefixes on flash messages and a ⚠ on field errors.
+  - Focus handling after comment delete, save, and cancel.
+  - A pinned placeholder color.
+
+  The browser walkthrough (7.2), the keyboard pass (7.4), and the recorded results (7.5) still need a running app in a real browser, as does the dev-stack smoke test (8.2).
