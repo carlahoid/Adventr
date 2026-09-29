@@ -13,6 +13,12 @@ spring:
     locations: classpath:db/migration
   thymeleaf:
     cache: true
+  servlet:
+    multipart:
+      # Above the 10 MB image limit, so that a too-large image gets a clear message from the
+      # app (AdventureImages) instead of a failed request. Bigger requests are refused outright.
+      max-file-size: 25MB
+      max-request-size: 26MB
   security:
     oauth2:
       client:
@@ -28,6 +34,11 @@ spring:
             issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/auth/realms/adventr}
             user-name-attribute: sub
 
+adventr:
+  images:
+    # Uploaded images; a Docker volume in production. Never served statically.
+    dir: ${IMAGES_DIR:/data/images}
+
 server:
   # Trust X-Forwarded-* from Caddy (private network ranges only), so redirect URIs use the public https URL.
   forward-headers-strategy: native
@@ -35,6 +46,10 @@ server:
     session:
       cookie:
         same-site: lax
+  tomcat:
+    # Read (and discard) oversized uploads up to this size, so the browser gets our error page
+    # instead of a reset connection.
+    max-swallow-size: 30MB
   error:
     whitelabel:
       enabled: false

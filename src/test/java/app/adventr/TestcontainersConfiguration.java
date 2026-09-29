@@ -3,6 +3,8 @@ package app.adventr;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -26,6 +28,9 @@ public class TestcontainersConfiguration {
 	public static final String APP_BASE_URL = "http://localhost:" + APP_PORT;
 
 	static final String CLIENT_SECRET = "test-client-secret";
+
+	/** Uploaded images of this test run. */
+	public static final Path IMAGES_DIR = tempDirectory();
 
 	@Bean
 	@ServiceConnection
@@ -53,6 +58,20 @@ public class TestcontainersConfiguration {
 					() -> keycloak.getAuthServerUrl() + "/realms/adventr");
 			registry.add("spring.security.oauth2.client.registration.keycloak.client-secret", () -> CLIENT_SECRET);
 		};
+	}
+
+	@Bean
+	DynamicPropertyRegistrar imagesDirectory() {
+		return (registry) -> registry.add("adventr.images.dir", IMAGES_DIR::toString);
+	}
+
+	private static Path tempDirectory() {
+		try {
+			return Files.createTempDirectory("adventr-test-images");
+		}
+		catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
 	}
 
 	private static int freePort() {

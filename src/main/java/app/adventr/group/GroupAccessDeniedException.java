@@ -14,4 +14,8 @@ public class GroupAccessDeniedException extends RuntimeException {
 		super("No access to group " + groupId);
 	}
 
+	public GroupAccessDeniedException(String message) {
+		super(message);
+	}
+
 }

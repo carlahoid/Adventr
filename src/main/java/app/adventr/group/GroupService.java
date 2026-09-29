@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.adventr.user.User;
+
 /**
  * Groups and their memberships: create, view, rename, leave, remove, transfer, delete.
  */
@@ -69,7 +71,8 @@ public class GroupService {
 		this.access.requireMember(userId, groupId);
 		return this.memberships.findActiveMembers(groupId)
 			.stream()
-			.map((row) -> new MemberView(row.userId(), row.displayName(), row.role(),
+			.map((row) -> new MemberView(row.userId(), row.displayName(), row.bio(),
+					User.avatarVersionOf(row.avatarPath()), row.role(),
 					row.joinedAt().atZone(this.clock.getZone()), row.userId() == userId))
 			.toList();
 	}

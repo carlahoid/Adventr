@@ -23,7 +23,7 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
 	 * Active members of a group with their current display names, owner first, then by join date.
 	 */
 	@Query("""
-			select new app.adventr.group.MemberRow(u.id, u.displayName, m.role, m.joinedAt)
+			select new app.adventr.group.MemberRow(u.id, u.displayName, u.bio, u.avatarPath, m.role, m.joinedAt)
 			from Membership m join User u on u.id = m.userId
 			where m.groupId = :groupId and m.leftAt is null
 			order by case when m.role = app.adventr.group.Role.OWNER then 0 else 1 end, m.joinedAt, m.id
@@ -57,5 +57,15 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
 	 */
 	@Query("select m.userId from Membership m where m.groupId = :groupId and m.leftAt is null and m.userId in :userIds")
 	List<Long> findActiveUserIds(@Param("groupId") long groupId, @Param("userIds") Iterable<Long> userIds);
+
+	/**
+	 * Whether both users are active members of at least one common group.
+	 */
+	@Query("""
+			select count(a) > 0 from Membership a, Membership b
+			where a.userId = :viewerId and b.userId = :userId and a.groupId = b.groupId
+				and a.leftAt is null and b.leftAt is null
+			""")
+	boolean shareActiveGroup(@Param("viewerId") long viewerId, @Param("userId") long userId);
 
 }

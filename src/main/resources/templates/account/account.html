@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title>My account · Adventr</title>
+</head>
+<body>
+<!--/* The logged-in user's own settings. No part of this page is visible to anyone else. */-->
+<main class="container account-page">
+	<div th:replace="~{fragments/flash :: flash}"></div>
+	<h1>My account</h1>
+
+	<section class="card" aria-labelledby="profile-heading">
+		<h2 id="profile-heading">Profile</h2>
+		<p class="muted">Your name, picture, and bio are shown only to people in your groups.</p>
+
+		<div class="avatar-editor">
+			<th:block th:replace="~{fragments/avatar :: avatar(${account.userId}, ${account.displayName}, ${account.avatarVersion}, 'lg')}"></th:block>
+			<form class="stacked-form" method="post" enctype="multipart/form-data" th:action="@{/account/avatar}">
+				<div class="field">
+					<label for="avatar" th:text="${account.hasAvatar() ? 'Replace profile picture' : 'Add a profile picture'}">Add a profile picture</label>
+					<input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required
+						   aria-describedby="avatar-hint">
+					<p id="avatar-hint" class="muted" th:text="${'JPEG, PNG, or WebP, up to ' + maxAvatarMegabytes + ' MB. It is cropped to a square.'}">JPEG, PNG, or WebP, up to 5 MB.</p>
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="button secondary">Upload</button>
+				</div>
+			</form>
+			<form th:if="${account.hasAvatar()}" method="post" th:action="@{/account/avatar/remove}"
+				  onsubmit="return confirm('Remove your profile picture?')">
+				<button type="submit" class="link-button danger">Remove picture</button>
+			</form>
+		</div>
+
+		<form class="stacked-form" method="post" th:action="@{/account/profile}">
+			<p class="flash flash-error" role="alert" th:unless="${profileErrors.isEmpty()}">
+				<span aria-hidden="true">⚠ </span>Please check the highlighted fields.
+			</p>
+			<div class="field">
+				<label for="displayName">Display name</label>
+				<input id="displayName" name="displayName" type="text" required th:maxlength="${maxDisplayName}"
+					   autocomplete="nickname" th:value="${displayName}"
+					   th:attr="aria-invalid=${profileErrors['displayName'] != null ? 'true' : null},
+								aria-describedby=${profileErrors['displayName'] != null ? 'displayName-error' : 'displayName-hint'}">
+				<p id="displayName-hint" class="muted" th:if="${profileErrors['displayName'] == null}">
+					<th:block th:if="${account.displayNameCustom}">You chose this name. Logging in no longer changes it.</th:block>
+					<th:block th:unless="${account.displayNameCustom}">This name comes from your login account and updates when you change it there.</th:block>
+				</p>
+				<p id="displayName-error" class="field-error" th:if="${profileErrors['displayName'] != null}"
+				   th:text="${profileErrors['displayName']}">Please enter a name.</p>
+			</div>
+			<div class="field">
+				<label for="bio">Bio <span class="muted">(optional)</span></label>
+				<input id="bio" name="bio" type="text" th:maxlength="${maxBio}" th:value="${bio}"
+					   placeholder="e.g. Always up for a hike"
+					   th:attr="aria-invalid=${profileErrors['bio'] != null ? 'true' : null},
+								aria-describedby=${profileErrors['bio'] != null ? 'bio-error' : 'bio-hint'}">
+				<p id="bio-hint" class="muted" th:if="${profileErrors['bio'] == null}"
+				   th:text="${'Up to ' + maxBio + ' characters, shown next to your name in the member list.'}">Up to 160 characters.</p>
+				<p id="bio-error" class="field-error" th:if="${profileErrors['bio'] != null}"
+				   th:text="${profileErrors['bio']}">Too long.</p>
+			</div>
+			<div class="form-actions">
+				<button type="submit" class="button">Save profile</button>
+			</div>
+		</form>
+
+		<form class="reset-name" method="post" th:action="@{/account/profile/reset-name}"
+			  th:if="${account.displayNameCustom}">
+			<button type="submit" class="link-button">Use my Keycloak name</button>
+			<span class="muted" th:text="${'(' + keycloakName + ')'}">(Kim Berg)</span>
+		</form>
+	</section>
+
+	<section class="card" aria-labelledby="appearance-heading">
+		<h2 id="appearance-heading">Appearance</h2>
+		<p class="muted">Saved on your account, so it applies on every device you use.</p>
+		<form class="stacked-form" method="post" th:action="@{/account/appearance}">
+			<fieldset class="choice-group">
+				<legend>Theme</legend>
+				<label class="choice" th:each="t : ${themes}">
+					<input type="radio" name="theme" th:value="${t}" th:checked="${t == account.theme}">
+					<span th:text="${t.label()}">Light</span><span class="muted" th:if="${t.name() == 'SYSTEM'}"> (follows your device)</span>
+				</label>
+			</fieldset>
+
+			<!--/* Changing the color refreshes the preview (htmx); nothing is saved until "Save appearance". */-->
+			<fieldset class="choice-group"
+					  th:hx-get="@{/account/appearance/preview}" hx-trigger="input delay:150ms, change"
+					  hx-target="#appearance-preview" hx-swap="outerHTML" hx-include="closest form">
+				<legend>Primary color</legend>
+				<div class="swatches">
+					<label class="swatch" th:each="p : ${presets}">
+						<input type="radio" name="color" th:value="${p.hex()}"
+							   th:checked="${p.hex() == account.effectiveAccentColor()}">
+						<span class="swatch-color" aria-hidden="true" th:style="${'background-color:' + p.hex()}"></span>
+						<span th:text="${p.name()}">Green</span>
+						<span class="swatch-check" aria-hidden="true">✓</span>
+					</label>
+					<label class="swatch">
+						<input id="color-custom" type="radio" name="color" value="custom" th:checked="${!presetPicked}">
+						<span>Custom</span>
+						<span class="swatch-check" aria-hidden="true">✓</span>
+					</label>
+					<label for="customColor" class="visually-hidden">Custom color</label>
+					<input id="customColor" name="customColor" type="color" th:value="${account.effectiveAccentColor()}"
+						   oninput="document.getElementById('color-custom').checked = true">
+				</div>
+			</fieldset>
+
+			<div th:replace="~{:: preview}"></div>
+
+			<div class="form-actions">
+				<button type="submit" class="button">Save appearance</button>
+				<button type="submit" class="link-button" name="action" value="reset-color"
+						th:if="${account.accentColor != null}">Reset to default color</button>
+			</div>
+		</form>
+	</section>
+
+	<section class="card" aria-labelledby="account-heading">
+		<h2 id="account-heading">Account</h2>
+		<p th:if="${account.email != null}">Signed in as <strong th:text="${account.email}">kim@example.com</strong></p>
+		<p class="muted">Your email address, password, and Google sign-in are managed by the login service.</p>
+		<a class="button secondary" th:href="${keycloakAccountUrl}">Manage email, password and sign-in</a>
+		<p class="muted free-note">Everything in Adventr is free. There are no paid features.</p>
+	</section>
+</main>
+
+<!--/* The live preview of the picked color in both themes (context: preview). Not rendered here. */-->
+<div id="appearance-preview" class="appearance-preview" th:fragment="preview" aria-live="polite">
+	<p class="field-error" th:unless="${preview.valid}">
+		<span aria-hidden="true">⚠ </span>That isn't a color. Pick a preset or use the color picker.
+	</p>
+	<div class="preview-panel" th:each="panel : ${preview.panels}" th:style="${panel.style()}">
+		<p class="preview-label"><strong th:text="${panel.label()}">Light</strong> mode</p>
+		<div class="preview-samples">
+			<span class="preview-button">Button</span>
+			<span class="preview-link">Link</span>
+			<span class="preview-focus">Focus</span>
+		</div>
+		<p class="preview-note" th:if="${panel.adjusted()}"><span aria-hidden="true">ℹ </span>Adjusted for readability</p>
+	</div>
+</div>
+</body>
+</html>

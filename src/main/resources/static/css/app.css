@@ -1,10 +1,99 @@
+/*
+ * Design tokens. Component styles below use only these variables: no color literal appears
+ * outside the three token blocks (TokenContrastTests checks this and the contrast of the
+ * declared pairs).
+ *
+ * - Light theme: :root.
+ * - Dark theme: the same block twice, for an explicit choice (data-theme="dark") and for the
+ *   system preference when no explicit light theme is set. The two must stay identical.
+ * - Accent: the server derives contrast-safe light (-l) and dark (-d) variants of the user's
+ *   primary color (AccentColors) and sets them inline on <html>. The -l/-d values here are the
+ *   derived values of the default green, so pages render correctly without the inline style.
+ */
 :root {
+	color-scheme: light;
 	--bg: #faf8f5;
+	--surface: #ffffff;
+	--surface-2: #f1eee9;
 	--fg: #1f2328;
-	--muted: #656d76;
-	--accent: #1f7a5c;
-	--accent-fg: #ffffff;
+	--muted: #5f6670;
 	--border: #e3ded6;
+	--border-strong: #8a8279;
+	--danger: #b42318;
+	--danger-fg: #ffffff;
+	--danger-text: #b42318;
+	--notice-bg: #e6f4ee;
+	--notice-fg: #1c4532;
+	--error-bg: #fdecea;
+	--error-fg: #8a1c12;
+	--disabled-bg: #ece9e4;
+	--disabled-fg: #6b6f75;
+	--shadow: rgb(0 0 0 / 0.08);
+	--accent-l: #1f7a5c;
+	--accent-fg-l: #ffffff;
+	--accent-text-l: #1f7a5c;
+	--accent-d: #1f7a5c;
+	--accent-fg-d: #ffffff;
+	--accent-text-d: #429777;
+	--accent: var(--accent-l);
+	--accent-fg: var(--accent-fg-l);
+	--accent-text: var(--accent-text-l);
+	--focus-ring: var(--accent-text);
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--bg: #16181b;
+	--surface: #1f2226;
+	--surface-2: #2b2f35;
+	--fg: #e8e6e3;
+	--muted: #a6adb6;
+	--border: #33373d;
+	--border-strong: #7f8791;
+	--danger: #e5484d;
+	--danger-fg: #000000;
+	--danger-text: #ff8b85;
+	--notice-bg: #153528;
+	--notice-fg: #c8ecd9;
+	--error-bg: #3f1b19;
+	--error-fg: #ffb4ac;
+	--disabled-bg: #2b2f35;
+	--disabled-fg: #8b929b;
+	--shadow: rgb(0 0 0 / 0.4);
+	--accent: var(--accent-d);
+	--accent-fg: var(--accent-fg-d);
+	--accent-text: var(--accent-text-d);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--bg: #16181b;
+		--surface: #1f2226;
+		--surface-2: #2b2f35;
+		--fg: #e8e6e3;
+		--muted: #a6adb6;
+		--border: #33373d;
+		--border-strong: #7f8791;
+		--danger: #e5484d;
+		--danger-fg: #000000;
+		--danger-text: #ff8b85;
+		--notice-bg: #153528;
+		--notice-fg: #c8ecd9;
+		--error-bg: #3f1b19;
+		--error-fg: #ffb4ac;
+		--disabled-bg: #2b2f35;
+		--disabled-fg: #8b929b;
+		--shadow: rgb(0 0 0 / 0.4);
+		--accent: var(--accent-d);
+		--accent-fg: var(--accent-fg-d);
+		--accent-text: var(--accent-text-d);
+	}
+}
+
+/* End of token blocks. */
+
+html {
 	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 	color: var(--fg);
 	background: var(--bg);
@@ -13,6 +102,22 @@
 body {
 	margin: 0;
 	line-height: 1.5;
+	color: var(--fg);
+	background: var(--bg);
+}
+
+a {
+	color: var(--accent-text);
+}
+
+a:hover {
+	text-decoration-thickness: 2px;
+}
+
+/* One visible focus indicator for every interactive element, in both themes and any accent. */
+:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
 }
 
 .site-header {
@@ -21,12 +126,12 @@ body {
 	gap: 1rem;
 	padding: 0.75rem 1rem;
 	border-bottom: 1px solid var(--border);
-	background: #fff;
+	background: var(--surface);
 }
 
 .brand {
 	font-weight: 700;
-	color: var(--accent);
+	color: var(--accent-text);
 	text-decoration: none;
 }
 
@@ -57,6 +162,11 @@ body {
 	font-weight: 600;
 }
 
+/* Hover changes more than color: buttons get an underline, links a thicker one. */
+.button:hover {
+	text-decoration: underline;
+}
+
 .link-button {
 	padding: 0;
 	border: 0;
@@ -65,6 +175,10 @@ body {
 	font: inherit;
 	cursor: pointer;
 	text-decoration: underline;
+}
+
+.link-button:hover {
+	text-decoration-thickness: 2px;
 }
 
 .empty-state {
@@ -91,22 +205,38 @@ button.button {
 }
 
 .button.secondary {
-	background: #fff;
+	background: var(--surface);
 	color: var(--fg);
-	border: 1px solid var(--border);
+	border: 1px solid var(--border-strong);
 }
 
 .button.danger {
-	background: #b42318;
+	background: var(--danger);
+	color: var(--danger-fg);
 }
 
 .link-button.danger {
-	color: #b42318;
+	color: var(--danger-text);
 }
 
-input[type="text"] {
+/* Disabled controls are exempt from contrast ratios, but look disabled by more than color. */
+button:disabled,
+.button:disabled {
+	background: var(--disabled-bg);
+	color: var(--disabled-fg);
+	border: 1px dashed var(--border-strong);
+	cursor: not-allowed;
+	text-decoration: none;
+}
+
+input[type="text"],
+input[type="url"],
+input[type="date"],
+textarea {
 	padding: 0.55rem 0.7rem;
-	border: 1px solid var(--border);
+	border: 1px solid var(--border-strong);
+	background: var(--surface);
+	color: var(--fg);
 	border-radius: 0.5rem;
 	font: inherit;
 	min-width: 0;
@@ -118,7 +248,7 @@ input[type="text"] {
 	padding: 1rem 1.25rem;
 	border: 1px solid var(--border);
 	border-radius: 0.75rem;
-	background: #fff;
+	background: var(--surface);
 }
 
 .card h2 {
@@ -127,7 +257,7 @@ input[type="text"] {
 }
 
 .danger-zone {
-	border-color: #f1c4bf;
+	border-color: var(--danger);
 }
 
 .inline-form {
@@ -136,8 +266,19 @@ input[type="text"] {
 	gap: 0.5rem;
 }
 
+/* Errors are marked by an icon as well as by color (the empty alt text keeps it out of the
+   accessible name; the message itself says what is wrong). */
+.field-error::before {
+	content: "⚠\FE0E  " / "";
+}
+
+::placeholder {
+	color: var(--muted);
+	opacity: 1;
+}
+
 .field-error {
-	color: #b42318;
+	color: var(--danger-text);
 	margin: 0.5rem 0 0;
 }
 
@@ -147,12 +288,13 @@ input[type="text"] {
 }
 
 .flash-notice {
-	background: #e6f4ee;
+	background: var(--notice-bg);
+	color: var(--notice-fg);
 }
 
 .flash-error {
-	background: #fdecea;
-	color: #8a1c12;
+	background: var(--error-bg);
+	color: var(--error-fg);
 }
 
 .page-heading {
@@ -211,9 +353,10 @@ input[type="text"] {
 	display: inline-block;
 	margin-left: 0.25rem;
 	padding: 0 0.45rem;
+	border: 1px solid var(--border-strong);
 	border-radius: 999px;
-	background: #e6f4ee;
-	color: var(--accent);
+	background: var(--surface-2);
+	color: var(--fg);
 	font-size: 0.8rem;
 	font-weight: 600;
 }
@@ -242,10 +385,10 @@ input[type="text"] {
 	margin: 0.4rem 0 0;
 	padding: 0.4rem 0;
 	list-style: none;
-	background: #fff;
+	background: var(--surface);
 	border: 1px solid var(--border);
 	border-radius: 0.5rem;
-	box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+	box-shadow: 0 4px 16px var(--shadow);
 }
 
 .group-switcher li a {
@@ -253,6 +396,10 @@ input[type="text"] {
 	padding: 0.35rem 0.9rem;
 	color: var(--fg);
 	text-decoration: none;
+}
+
+.group-switcher li a:hover {
+	text-decoration: underline;
 }
 
 .group-switcher li a[aria-current="page"] {
@@ -263,4 +410,540 @@ input[type="text"] {
 	border-top: 1px solid var(--border);
 	margin-top: 0.3rem;
 	padding-top: 0.3rem;
+}
+
+/* Forms with one field per row (adventure form, image upload) */
+
+.stacked-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.stacked-form .flash {
+	margin: 0;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.field label {
+	font-weight: 600;
+}
+
+.field .muted,
+.field .field-error {
+	margin: 0;
+}
+
+.field-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.field-row .field {
+	min-width: 10rem;
+}
+
+textarea {
+	resize: vertical;
+}
+
+.form-actions {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.full-width {
+	flex-basis: 100%;
+}
+
+/* Adventure list */
+
+.quick-add-card .inline-form {
+	margin: 0;
+}
+
+.quick-add-more {
+	margin: 0.5rem 0 0;
+	font-size: 0.9rem;
+}
+
+.adventure-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1.5rem;
+}
+
+.adventure-list > li {
+	display: flex;
+	gap: 0.9rem;
+	align-items: flex-start;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid var(--border);
+}
+
+.adventure-list > li:last-child {
+	border-bottom: 0;
+}
+
+.thumbnail {
+	flex: none;
+	width: 4rem;
+	height: 4rem;
+	object-fit: cover;
+	border-radius: 0.5rem;
+}
+
+.adventure-summary {
+	flex: 1;
+	min-width: 0;
+}
+
+.adventure-title {
+	font-weight: 600;
+	color: var(--fg);
+	overflow-wrap: anywhere;
+}
+
+.adventure-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 1rem;
+	margin-top: 0.25rem;
+}
+
+.comment-count {
+	color: var(--muted);
+}
+
+/* Reactions: the own reaction is marked by weight and an outline, not only by color. */
+
+.reaction-bar form {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	margin: 0;
+}
+
+.reaction {
+	padding: 0.15rem 0.55rem;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	background: none;
+	color: var(--fg);
+	font: inherit;
+	cursor: pointer;
+}
+
+.reaction:hover {
+	border-color: var(--border-strong);
+}
+
+.reaction.mine {
+	border-color: var(--accent);
+	background: var(--surface-2);
+	font-weight: 700;
+}
+
+.reactor-names {
+	list-style: none;
+	padding: 0;
+	margin: 0.5rem 0 0;
+}
+
+.reactor-names li {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+/* Adventure detail */
+
+.back-link {
+	margin: 0 0 0.5rem;
+}
+
+.adventure-heading {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.adventure-byline {
+	margin: 0.25rem 0 1rem;
+}
+
+.status-control {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+	margin: 0 0 1.25rem;
+}
+
+.status-label {
+	font-weight: 600;
+}
+
+.segmented {
+	display: inline-flex;
+	border: 1px solid var(--border-strong);
+	border-radius: 0.5rem;
+}
+
+.segmented button {
+	padding: 0.4rem 0.9rem;
+	border: 0;
+	border-left: 1px solid var(--border-strong);
+	background: var(--surface);
+	color: var(--fg);
+	font: inherit;
+	cursor: pointer;
+}
+
+.segmented button:first-child {
+	border-left: 0;
+	border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.segmented button:last-child {
+	border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.segmented button:hover:not(.current) {
+	text-decoration: underline;
+}
+
+.segmented button:focus-visible {
+	position: relative;
+	z-index: 1;
+}
+
+.segmented button.current {
+	background: var(--accent);
+	color: var(--accent-fg);
+	font-weight: 600;
+}
+
+.adventure-image {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	margin: 0 0 1.25rem;
+	border-radius: 0.75rem;
+}
+
+.adventure-fields {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.4rem 1rem;
+	margin: 0 0 1rem;
+}
+
+.adventure-fields dt {
+	font-weight: 600;
+	color: var(--muted);
+}
+
+.adventure-fields dd {
+	margin: 0;
+	min-width: 0;
+}
+
+.external-link {
+	overflow-wrap: anywhere;
+}
+
+.adventure-description {
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+.adventure-reactions {
+	margin: 1.25rem 0;
+}
+
+.adventure-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 1.5rem 0;
+}
+
+.adventure-actions form {
+	margin: 0;
+}
+
+/* Comments */
+
+.comments {
+	margin: 2rem 0 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--border);
+}
+
+.comments h2 {
+	font-size: 1.1rem;
+}
+
+.comment-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1.25rem;
+}
+
+.comment {
+	padding: 0.75rem 0;
+	border-bottom: 1px solid var(--border);
+}
+
+.comment-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.6rem;
+}
+
+.comment-text {
+	margin: 0.3rem 0 0;
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+.comment-actions {
+	display: flex;
+	gap: 1rem;
+	margin-top: 0.3rem;
+	font-size: 0.9rem;
+}
+
+.comment-actions form {
+	margin: 0;
+}
+
+.comment .stacked-form {
+	margin-top: 0.5rem;
+}
+
+/* My account */
+
+.reset-name {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.5rem;
+	margin-top: 1rem;
+}
+
+.free-note {
+	margin-bottom: 0;
+}
+
+.account-name-link {
+	color: var(--fg);
+	font-weight: 600;
+}
+
+.member-bio {
+	overflow-wrap: anywhere;
+}
+
+/* Avatars: a round image, or initials on a neutral background. Always next to the name. */
+
+.avatar {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	object-fit: cover;
+	vertical-align: middle;
+}
+
+.avatar-initials {
+	border: 1px solid var(--border);
+	background: var(--surface-2);
+	color: var(--fg);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1;
+}
+
+.avatar-xs {
+	width: 1.25rem;
+	height: 1.25rem;
+	font-size: 0.55rem;
+}
+
+.avatar-md {
+	width: 2.25rem;
+	height: 2.25rem;
+	font-size: 0.85rem;
+}
+
+.avatar-lg {
+	width: 5rem;
+	height: 5rem;
+	font-size: 1.6rem;
+}
+
+.author {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.account-name-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.member {
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+}
+
+.avatar-editor {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+.avatar-editor form {
+	margin: 0;
+}
+
+/* Appearance form */
+
+.choice-group {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.choice-group legend {
+	margin-bottom: 0.4rem;
+	font-weight: 600;
+}
+
+.choice {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.2rem 0;
+}
+
+.swatches {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* A preset: native radio, color chip, name, and a check mark when selected (not color alone). */
+.swatch {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.3rem 0.6rem;
+	border: 1px solid var(--border-strong);
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.swatch:has(input:checked) {
+	border-width: 2px;
+	font-weight: 700;
+}
+
+.swatch-color {
+	width: 1rem;
+	height: 1rem;
+	border: 1px solid var(--border-strong);
+	border-radius: 50%;
+}
+
+.swatch-check {
+	visibility: hidden;
+}
+
+.swatch input:checked ~ .swatch-check {
+	visibility: visible;
+}
+
+input[type="color"] {
+	width: 2.75rem;
+	height: 2.25rem;
+	padding: 0.15rem;
+	border: 1px solid var(--border-strong);
+	border-radius: 0.5rem;
+	background: var(--surface);
+	cursor: pointer;
+}
+
+/* The preview panels get their theme's colors as --p-* variables from the server. */
+.appearance-preview {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 0.75rem;
+}
+
+.preview-panel {
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--border-strong);
+	border-radius: 0.75rem;
+	background: var(--p-bg);
+	color: var(--p-fg);
+}
+
+.preview-label,
+.preview-note {
+	margin: 0 0 0.5rem;
+}
+
+.preview-note {
+	margin: 0.6rem 0 0;
+	font-size: 0.9rem;
+}
+
+.preview-samples {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.9rem;
+}
+
+.preview-button {
+	padding: 0.35rem 0.8rem;
+	border-radius: 0.5rem;
+	background: var(--p-accent);
+	color: var(--p-accent-fg);
+	font-weight: 600;
+}
+
+.preview-link {
+	color: var(--p-accent-text);
+	text-decoration: underline;
+}
+
+.preview-focus {
+	padding: 0.1rem 0.4rem;
+	border-radius: 0.25rem;
+	outline: 2px solid var(--p-accent-text);
+	outline-offset: 2px;
 }

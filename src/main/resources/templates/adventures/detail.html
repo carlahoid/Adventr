@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title th:text="${adventure.title + ' · ' + group.name + ' · Adventr'}">Canoe trip · Mountain Crew · Adventr</title>
+</head>
+<body>
+<main class="container" th:with="a=${adventure}">
+	<div th:replace="~{fragments/flash :: flash}"></div>
+	<p class="back-link"><a th:href="@{/groups/{g}(g=${a.groupId})}" th:text="${'← ' + group.name}">← Mountain Crew</a></p>
+	<h1 class="adventure-heading" th:text="${a.title}">Canoe trip</h1>
+	<p class="muted adventure-byline">
+		Added by <span th:replace="~{fragments/author :: author(${a.creator})}">Anna</span>
+		on <span th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}">3 Oct 2026</span><th:block
+			th:if="${a.wasUpdated()}"> · last updated
+		<span th:text="${#temporals.format(a.updatedAt, 'd MMM yyyy, HH:mm')}">4 Oct 2026, 10:12</span></th:block>
+	</p>
+
+	<!--/* Any member can change the status. The current one is marked by aria-pressed and a check mark. */-->
+	<form class="status-control" method="post" th:action="@{/groups/{g}/adventures/{id}/status(g=${a.groupId},id=${a.id})}">
+		<span class="status-label" id="status-label">Status</span>
+		<div class="segmented" role="group" aria-labelledby="status-label">
+			<button type="submit" name="status" th:each="s : ${T(app.adventr.adventure.Status).values()}"
+					th:value="${s}" th:attr="aria-pressed=${s == a.status}"
+					th:classappend="${s == a.status} ? 'current'"><span aria-hidden="true"
+					th:if="${s == a.status}">✓ </span><span th:text="${s.label()}">Idea</span></button>
+		</div>
+	</form>
+
+	<img class="adventure-image" th:if="${a.hasImage()}" th:alt="${'Photo for ' + a.title}"
+		 th:src="@{/groups/{g}/adventures/{id}/image(g=${a.groupId},id=${a.id},v=${a.imageVersion})}">
+
+	<dl class="adventure-fields">
+		<th:block th:if="${a.dateFrom != null or a.dateTo != null}">
+			<dt>When</dt>
+			<dd>
+				<span th:if="${a.dateFrom != null}" th:text="${#temporals.format(a.dateFrom, 'EEE d MMM yyyy')}">Sat 12 Oct 2026</span><th:block
+					th:if="${a.dateTo != null and a.dateTo != a.dateFrom}"><th:block th:if="${a.dateFrom != null}"> – </th:block><th:block
+					th:if="${a.dateFrom == null}">Until </th:block><span
+					th:text="${#temporals.format(a.dateTo, 'EEE d MMM yyyy')}">Mon 14 Oct 2026</span></th:block>
+			</dd>
+		</th:block>
+		<th:block th:if="${a.timeHint != null}">
+			<dt>Time</dt>
+			<dd th:text="${a.timeHint}">Early morning</dd>
+		</th:block>
+		<th:block th:if="${a.location != null}">
+			<dt>Where</dt>
+			<dd th:text="${a.location}">Lake Tahoe</dd>
+		</th:block>
+		<th:block th:if="${a.hasCost()}">
+			<dt>Cost</dt>
+			<dd><span th:if="${a.costAmount != null}"
+					  th:text="${#numbers.formatDecimal(a.costAmount, 1, 'DEFAULT', 2, 'DEFAULT')}">45.00</span><th:block
+					th:if="${a.costAmount != null and a.costNote != null}"> · </th:block><span
+					th:if="${a.costNote != null}" th:text="${a.costNote}">per person</span></dd>
+		</th:block>
+		<th:block th:if="${a.link != null}">
+			<dt>Link</dt>
+			<dd><a class="external-link" th:href="${a.link}" th:text="${a.link}" target="_blank"
+				   rel="noopener noreferrer">https://example.com</a></dd>
+		</th:block>
+	</dl>
+	<p class="adventure-description" th:if="${a.description != null}" th:text="${a.description}">Bring snacks.</p>
+
+	<section class="adventure-reactions" aria-labelledby="reactions-heading">
+		<h2 id="reactions-heading" class="visually-hidden">Reactions</h2>
+		<div th:replace="~{adventures/reactions :: bar(${reactions}, true)}"></div>
+	</section>
+
+	<div class="adventure-actions" th:if="${a.canEdit or a.canDelete}">
+		<a class="button secondary" th:if="${a.canEdit}"
+		   th:href="@{/groups/{g}/adventures/{id}/edit(g=${a.groupId},id=${a.id})}">Edit</a>
+		<form th:if="${a.canDelete}" method="post"
+			  th:action="@{/groups/{g}/adventures/{id}/delete(g=${a.groupId},id=${a.id})}"
+			  onsubmit="return confirm('Delete this adventure with its reactions, comments, and image?')">
+			<button type="submit" class="button danger">Delete</button>
+		</form>
+	</div>
+
+	<section th:replace="~{adventures/comments :: thread}"></section>
+</main>
+</body>
+</html>

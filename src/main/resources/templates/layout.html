@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <!--/* Base layout. Pages use: <html th:replace="~{layout :: page(~{::title}, ~{::main})}"> */-->
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<!--/*
+  Theme and primary color are rendered into <html> on the server, so the first paint is already
+  right (no flash, no script). data-theme is omitted for the system theme; the style holds only
+  hex values computed by AccentColors. Without "appearance", the stylesheet defaults apply.
+*/-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)"
+	  th:attr="data-theme=${appearance != null ? appearance.dataTheme() : null},
+			   style=${appearance != null ? appearance.style() : null}">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">

@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!--/* One-off messages after a redirect (flash attributes "notice" and "error"). */-->
+<!--/* One-off messages after a redirect (flash attributes "notice" and "error"). The icon and the
+     role tell them apart, not only the background color. */-->
 <div th:fragment="flash" th:remove="tag">
-	<p class="flash flash-notice" role="status" th:if="${notice != null}" th:text="${notice}">Done.</p>
-	<p class="flash flash-error" role="alert" th:if="${error != null}" th:text="${error}">That didn't work.</p>
+	<p class="flash flash-notice" role="status" th:if="${notice != null}"><span aria-hidden="true">✓ </span><span
+			th:text="${notice}">Done.</span></p>
+	<p class="flash flash-error" role="alert" th:if="${error != null}"><span aria-hidden="true">⚠ </span><span
+			class="visually-hidden">Error: </span><span th:text="${error}">That didn't work.</span></p>
 </div>
 </body>
 </html>

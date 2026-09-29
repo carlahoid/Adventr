@@ -11,3 +11,7 @@ spring:
             client-secret: ${KEYCLOAK_CLIENT_SECRET:adventr-dev-client-secret}
   thymeleaf:
     cache: false
+
+adventr:
+  images:
+    dir: ${IMAGES_DIR:target/dev-images}

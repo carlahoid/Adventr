@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*
+  The 👍/👎 bar for one adventure (an app.adventr.adventure.ReactionBar). In the list, a tooltip
+  names who reacted; on the detail page (detail = true), the names are listed below the buttons.
+  With htmx, a click re-renders only this element; without JavaScript, the form posts and
+  redirects back. The buttons keep their ids, so htmx restores keyboard focus after the swap.
+*/-->
+<div class="reaction-bar" th:fragment="bar(bar, detail)" th:id="${'reactions-' + bar.adventureId}">
+	<form method="post"
+		  th:action="@{/groups/{g}/adventures/{a}/reactions(g=${bar.groupId},a=${bar.adventureId})}"
+		  th:hx-post="@{/groups/{g}/adventures/{a}/reactions(g=${bar.groupId},a=${bar.adventureId})}"
+		  th:hx-target="${'#reactions-' + bar.adventureId}" hx-swap="outerHTML">
+		<input type="hidden" name="view" th:value="${detail ? 'detail' : 'list'}">
+		<button type="submit" name="type" value="UP" class="reaction" th:classappend="${bar.mineUp} ? 'mine'"
+				th:id="${'reaction-up-' + bar.adventureId}" th:attr="aria-pressed=${bar.mineUp}" th:title="${bar.upNames}">
+			<span aria-hidden="true">👍</span> <span th:text="${bar.ups}">5</span><span
+				class="visually-hidden"> thumbs up</span>
+		</button>
+		<span class="muted" aria-hidden="true">·</span>
+		<button type="submit" name="type" value="DOWN" class="reaction" th:classappend="${bar.mineDown} ? 'mine'"
+				th:id="${'reaction-down-' + bar.adventureId}" th:attr="aria-pressed=${bar.mineDown}" th:title="${bar.downNames}">
+			<span aria-hidden="true">👎</span> <span th:text="${bar.downs}">1</span><span
+				class="visually-hidden"> thumbs down</span>
+		</button>
+	</form>
+	<ul class="reactor-names" th:if="${detail}">
+		<li th:unless="${bar.up.isEmpty()}"><span aria-hidden="true">👍</span><span class="visually-hidden">Thumbs up:</span>
+			<th:block th:each="author, it : ${bar.up}"><span th:replace="~{fragments/author :: author(${author})}">Anna</span><th:block
+					th:unless="${it.last}">, </th:block></th:block></li>
+		<li th:unless="${bar.down.isEmpty()}"><span aria-hidden="true">👎</span><span class="visually-hidden">Thumbs down:</span>
+			<th:block th:each="author, it : ${bar.down}"><span th:replace="~{fragments/author :: author(${author})}">Chris</span><th:block
+					th:unless="${it.last}">, </th:block></th:block></li>
+	</ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title th:text="${group.name + ' · Adventr'}">Mountain Crew · Adventr</title>
+</head>
+<body>
+<main class="container" th:with="groupId=${group.id}">
+	<div th:replace="~{fragments/flash :: flash}"></div>
+	<div class="page-heading">
+		<h1 th:text="${group.name}">Mountain Crew</h1>
+		<a th:href="@{/groups/{id}/settings(id=${group.id})}">Members &amp; settings</a>
+	</div>
+
+	<section class="card quick-add-card">
+		<h2 class="visually-hidden">Add an idea</h2>
+		<!--/* Quick add: title only. Errors come back into this form; success re-renders the list. */-->
+		<form id="quick-add" class="inline-form" method="post" th:fragment="quickAdd"
+			  th:action="@{/groups/{g}/adventures(g=${groupId})}"
+			  th:hx-post="@{/groups/{g}/adventures(g=${groupId})}" hx-target="#adventure-sections" hx-swap="outerHTML"
+			  th:attr="hx-swap-oob=${quickAddOutOfBand == true ? 'true' : null}">
+			<label for="quick-add-title" class="visually-hidden">New idea</label>
+			<input id="quick-add-title" name="title" type="text" maxlength="120" required
+				   placeholder="Add an idea, e.g. Canoe trip" autocomplete="off"
+				   th:value="${quickAddTitle}"
+				   th:attr="aria-invalid=${quickAddError != null ? 'true' : null},
+							aria-describedby=${quickAddError != null ? 'quick-add-error' : null},
+							autofocus=${quickAddOutOfBand == true or quickAddError != null ? 'autofocus' : null}">
+			<button type="submit" class="button">Add</button>
+			<p id="quick-add-error" class="field-error full-width" th:if="${quickAddError != null}"
+			   th:text="${quickAddError}">Please enter a title.</p>
+		</form>
+		<p class="quick-add-more"><a th:href="@{/groups/{g}/adventures/new(g=${groupId})}">Add with details</a></p>
+	</section>
+
+	<div id="adventure-sections" th:fragment="sections">
+		<p class="empty-state" th:if="${adventures.isEmpty()}">
+			No adventures yet. Add the first idea above: what would you like to do together?
+		</p>
+		<section th:unless="${adventures.planned.isEmpty()}" aria-labelledby="planned-heading">
+			<h2 id="planned-heading">Planned</h2>
+			<ul class="adventure-list">
+				<li th:each="item : ${adventures.planned}" th:insert="~{:: item(${item})}"></li>
+			</ul>
+		</section>
+		<section th:unless="${adventures.ideas.isEmpty()}" aria-labelledby="ideas-heading">
+			<h2 id="ideas-heading">Ideas</h2>
+			<ul class="adventure-list">
+				<li th:each="item : ${adventures.ideas}" th:insert="~{:: item(${item})}"></li>
+			</ul>
+		</section>
+		<section th:unless="${adventures.memories.isEmpty()}" aria-labelledby="memories-heading">
+			<h2 id="memories-heading">Memories</h2>
+			<ul class="adventure-list">
+				<li th:each="item : ${adventures.memories}" th:insert="~{:: item(${item})}"></li>
+			</ul>
+		</section>
+	</div>
+</main>
+
+<!--/* Fragments used by the page and by htmx responses; not rendered here. */-->
+<!--/* One list entry; the image is decorative, since the title is right next to it. */-->
+<th:block th:fragment="item(item)">
+	<img class="thumbnail" th:if="${item.hasImage()}" alt="" loading="lazy" width="64" height="64"
+		 th:src="@{/groups/{g}/adventures/{a}/thumbnail(g=${groupId},a=${item.id},v=${item.imageVersion})}">
+	<div class="adventure-summary">
+		<a class="adventure-title" th:href="@{/groups/{g}/adventures/{a}(g=${groupId},a=${item.id})}"
+		   th:text="${item.title}">Canoe trip</a>
+		<div class="muted" th:if="${item.dateFrom != null}">
+			<span th:text="${#temporals.format(item.dateFrom, 'd MMM yyyy')}">12 Oct 2026</span><th:block
+				th:if="${item.dateTo != null and item.dateTo != item.dateFrom}"> –
+			<span th:text="${#temporals.format(item.dateTo, 'd MMM yyyy')}">14 Oct 2026</span></th:block>
+		</div>
+		<div class="adventure-meta">
+			<div th:replace="~{adventures/reactions :: bar(${item.reactions}, false)}"></div>
+			<span class="comment-count">
+				<span aria-hidden="true">💬</span> <span th:text="${item.commentCount}">3</span><span
+					class="visually-hidden" th:text="${item.commentCount == 1 ? ' comment' : ' comments'}"> comments</span>
+			</span>
+		</div>
+	</div>
+</th:block>
+
+<!--/* htmx response to a successful quick add: the list, plus a fresh form out of band. */-->
+<th:block th:fragment="quickAddResult">
+	<div th:replace="~{:: sections}"></div>
+	<form th:replace="~{:: quickAdd}"></form>
+</th:block>
+</body>
+</html>

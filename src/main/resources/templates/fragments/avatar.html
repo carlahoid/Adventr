@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*
+  A user's avatar, or an initials placeholder when there is none or the viewer may not see it
+  (version = null). Both are decorative: the name is always shown as text right next to them.
+  size: xs (author labels), sm (header), md (member list), lg (account page).
+*/-->
+<th:block th:fragment="avatar(userId, name, version, size)"><img th:if="${version != null}" class="avatar"
+		th:classappend="${'avatar-' + size}" alt="" loading="lazy"
+		th:src="@{/users/{id}/avatar(id=${userId},v=${version})}"><span th:if="${version == null}"
+		class="avatar avatar-initials" th:classappend="${'avatar-' + size}" aria-hidden="true"
+		th:text="${T(app.adventr.user.Initials).of(name)}">KC</span></th:block>
+</body>
+</html>

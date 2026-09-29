@@ -82,6 +82,32 @@ class LoginFlowIntegrationTests {
 	}
 
 	@Test
+	void customDisplayNameSurvivesLoginAndShowsInTheHeaderRightAway() {
+		Browser browser = new Browser();
+		String username = uniqueUsername();
+		Page groups = register(browser, APP_BASE_URL + "/groups", username, "Kim", "Before");
+		String sub = keycloakUser(username).getId();
+		User user = this.users.findByKeycloakSub(sub).orElseThrow();
+		user.setCustomDisplayName("Kim the Climber");
+		this.users.save(user);
+		logout(browser, groups);
+
+		UserResource keycloakUser = this.keycloak.getKeycloakAdminClient().realm("adventr").users().get(sub);
+		UserRepresentation representation = keycloakUser.toRepresentation();
+		representation.setLastName("After");
+		representation.setEmail(username + "@changed.example.com");
+		keycloakUser.update(representation);
+
+		Page login = browser.get(APP_BASE_URL + "/groups");
+		Page landed = browser.post(login.formAction("kc-form-login"), Map.of("username", username, "password", PASSWORD));
+
+		assertThat(landed.body()).contains("Kim the Climber").doesNotContain("Kim After");
+		User reloaded = this.users.findByKeycloakSub(sub).orElseThrow();
+		assertThat(reloaded.getDisplayName()).isEqualTo("Kim the Climber");
+		assertThat(reloaded.getEmail()).isEqualTo(username + "@changed.example.com");
+	}
+
+	@Test
 	void logoutEndsAppAndKeycloakSessions() {
 		Browser browser = new Browser();
 		Page groups = register(browser, APP_BASE_URL + "/groups", uniqueUsername(), "Lou", "Gout");

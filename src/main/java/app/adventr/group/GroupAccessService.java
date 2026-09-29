@@ -42,4 +42,16 @@ public class GroupAccessService {
 		return membership;
 	}
 
+	/**
+	 * Allows a user to see another user's profile data that is not tied to one group (their
+	 * avatar): the viewer is that user, or both are currently active members of some group.
+	 * @throws GroupAccessDeniedException (404) otherwise, so that user ids cannot be probed
+	 */
+	@Transactional(readOnly = true)
+	public void requireSharedGroup(long viewerId, long userId) {
+		if (viewerId != userId && !this.memberships.shareActiveGroup(viewerId, userId)) {
+			throw new GroupAccessDeniedException("User " + viewerId + " shares no group with user " + userId);
+		}
+	}
+
 }

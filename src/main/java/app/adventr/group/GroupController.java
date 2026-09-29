@@ -14,7 +14,8 @@ import app.adventr.invite.InviteService;
 import app.adventr.user.CurrentUser;
 
 /**
- * "My groups", the group page, and the group settings actions. Authorization happens in
+ * "My groups" and the group settings actions (the group page itself is the adventure list,
+ * {@code AdventureController}). Authorization happens in
  * {@link GroupService}; rule violations come back as {@link GroupRuleException} and are shown
  * as a message on the page the user came from.
  */
@@ -48,15 +49,6 @@ class GroupController {
 			model.addAttribute("name", name);
 			return myGroups(currentUser, model);
 		}
-	}
-
-	/**
-	 * The group's home page. Adventures replace the placeholder in task 6.5.
-	 */
-	@GetMapping("/{groupId}")
-	String group(@PathVariable long groupId, CurrentUser currentUser, Model model) {
-		model.addAttribute("group", this.groups.view(currentUser.id(), groupId));
-		return "groups/group";
 	}
 
 	@GetMapping("/{groupId}/settings")

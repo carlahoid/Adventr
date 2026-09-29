@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.servlet.HandlerMapping;
 
+import app.adventr.account.Appearance;
 import app.adventr.group.GroupService;
 import app.adventr.group.GroupSummary;
 import app.adventr.user.CurrentUser;
@@ -33,6 +34,7 @@ public class LayoutModelAdvice {
 	}
 
 	/**
+	 * {@code appearance} (theme and colors for {@code <html>}; defaults on public pages),
 	 * {@code currentUser} for the header (absent on public pages), plus the group switcher's
 	 * {@code switcherGroups} (the user's active groups) and {@code currentGroup} (the one in
 	 * the {@code /groups/{groupId}} URL, if the user is a member of it).
@@ -41,9 +43,11 @@ public class LayoutModelAdvice {
 	void layout(Model model, HttpServletRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication == null || !(authentication.getPrincipal() instanceof OidcUser oidcUser)) {
+			model.addAttribute("appearance", Appearance.DEFAULT);
 			return;
 		}
 		CurrentUser currentUser = this.userService.current(oidcUser);
+		model.addAttribute("appearance", Appearance.of(currentUser.theme(), currentUser.accentColor()));
 		List<GroupSummary> groups = this.groupService.myGroups(currentUser.id());
 		model.addAttribute("currentUser", currentUser);
 		model.addAttribute("switcherGroups", groups);

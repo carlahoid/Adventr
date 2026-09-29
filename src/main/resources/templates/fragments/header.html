@@ -17,7 +17,9 @@
 		</details>
 	</nav>
 	<div class="account" th:if="${currentUser != null}">
-		<span class="account-name" th:text="${currentUser.displayName}">Anna</span>
+		<a class="account-name account-name-link" th:href="@{/account}" title="My account"><th:block
+				th:replace="~{fragments/avatar :: avatar(${currentUser.id}, ${currentUser.displayName}, ${currentUser.avatarVersion}, 'sm')}"></th:block><span
+				th:text="${currentUser.displayName}">Anna</span></a>
 		<form th:action="@{/logout}" method="post">
 			<button type="submit" class="link-button">Log out</button>
 		</form>

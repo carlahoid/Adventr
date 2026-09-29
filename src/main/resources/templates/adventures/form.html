@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head>
+	<title th:text="${(adventure != null ? 'Edit adventure' : 'New adventure') + ' · ' + group.name + ' · Adventr'}">Edit adventure · Adventr</title>
+</head>
+<body>
+<!--/* The full form, for "Add with details" (no adventure yet) and for editing (adventure set). */-->
+<main class="container" th:with="editing=${adventure != null},
+		action=${adventure != null} ? @{/groups/{g}/adventures/{a}/edit(g=${group.id},a=${adventure.id})} : @{/groups/{g}/adventures/new(g=${group.id})},
+		cancel=${adventure != null} ? @{/groups/{g}/adventures/{a}(g=${group.id},a=${adventure.id})} : @{/groups/{g}(g=${group.id})}">
+	<div th:replace="~{fragments/flash :: flash}"></div>
+	<h1 th:text="${editing ? 'Edit adventure' : 'New adventure'}">Edit adventure</h1>
+
+	<form class="card stacked-form" method="post" th:action="${action}" th:object="${form}" novalidate>
+		<p class="flash flash-error" role="alert" th:if="${errors != null}">
+			<span aria-hidden="true">⚠ </span>Please check the highlighted fields.
+		</p>
+
+		<div class="field">
+			<label for="title">Title <span class="muted">(required)</span></label>
+			<input id="title" name="title" type="text" maxlength="120" required th:value="*{title}"
+				   th:attr="aria-invalid=${errors?.get('title') != null ? 'true' : null},
+							aria-describedby=${errors?.get('title') != null ? 'title-error' : null}">
+			<p id="title-error" class="field-error" th:if="${errors?.get('title') != null}" th:text="${errors.get('title')}"></p>
+		</div>
+
+		<div class="field">
+			<label for="description">Description</label>
+			<textarea id="description" name="description" rows="5" maxlength="5000" th:text="*{description}"
+					  th:attr="aria-invalid=${errors?.get('description') != null ? 'true' : null},
+							   aria-describedby=${errors?.get('description') != null ? 'description-error' : null}"></textarea>
+			<p id="description-error" class="field-error" th:if="${errors?.get('description') != null}" th:text="${errors.get('description')}"></p>
+		</div>
+
+		<div class="field">
+			<label for="location">Where</label>
+			<input id="location" name="location" type="text" maxlength="200" th:value="*{location}"
+				   th:attr="aria-invalid=${errors?.get('location') != null ? 'true' : null},
+							aria-describedby=${errors?.get('location') != null ? 'location-error' : null}">
+			<p id="location-error" class="field-error" th:if="${errors?.get('location') != null}" th:text="${errors.get('location')}"></p>
+		</div>
+
+		<div class="field-row">
+			<div class="field">
+				<label for="dateFrom">From</label>
+				<input id="dateFrom" name="dateFrom" type="date" th:value="*{dateFrom}"
+					   th:attr="aria-invalid=${errors?.get('dateFrom') != null ? 'true' : null},
+								aria-describedby=${errors?.get('dateFrom') != null ? 'dateFrom-error' : null}">
+				<p id="dateFrom-error" class="field-error" th:if="${errors?.get('dateFrom') != null}" th:text="${errors.get('dateFrom')}"></p>
+			</div>
+			<div class="field">
+				<label for="dateTo">To</label>
+				<input id="dateTo" name="dateTo" type="date" th:value="*{dateTo}"
+					   th:attr="aria-invalid=${errors?.get('dateTo') != null ? 'true' : null},
+								aria-describedby=${errors?.get('dateTo') != null ? 'dateTo-error' : null}">
+				<p id="dateTo-error" class="field-error" th:if="${errors?.get('dateTo') != null}" th:text="${errors.get('dateTo')}"></p>
+			</div>
+		</div>
+
+		<div class="field">
+			<label for="timeHint">Time</label>
+			<input id="timeHint" name="timeHint" type="text" maxlength="100" placeholder="e.g. early morning, a weekend"
+				   th:value="*{timeHint}"
+				   th:attr="aria-invalid=${errors?.get('timeHint') != null ? 'true' : null},
+							aria-describedby=${errors?.get('timeHint') != null ? 'timeHint-error' : null}">
+			<p id="timeHint-error" class="field-error" th:if="${errors?.get('timeHint') != null}" th:text="${errors.get('timeHint')}"></p>
+		</div>
+
+		<div class="field-row">
+			<div class="field">
+				<label for="costAmount">Cost</label>
+				<input id="costAmount" name="costAmount" type="text" inputmode="decimal" placeholder="e.g. 45"
+					   th:value="*{costAmount}"
+					   th:attr="aria-invalid=${errors?.get('costAmount') != null ? 'true' : null},
+								aria-describedby=${errors?.get('costAmount') != null ? 'costAmount-error' : null}">
+				<p id="costAmount-error" class="field-error" th:if="${errors?.get('costAmount') != null}" th:text="${errors.get('costAmount')}"></p>
+			</div>
+			<div class="field">
+				<label for="costNote">Cost note</label>
+				<input id="costNote" name="costNote" type="text" maxlength="100" placeholder="e.g. per person"
+					   th:value="*{costNote}"
+					   th:attr="aria-invalid=${errors?.get('costNote') != null ? 'true' : null},
+								aria-describedby=${errors?.get('costNote') != null ? 'costNote-error' : null}">
+				<p id="costNote-error" class="field-error" th:if="${errors?.get('costNote') != null}" th:text="${errors.get('costNote')}"></p>
+			</div>
+		</div>
+
+		<div class="field">
+			<label for="link">Link</label>
+			<input id="link" name="link" type="url" maxlength="2000" placeholder="https://…" th:value="*{link}"
+				   th:attr="aria-invalid=${errors?.get('link') != null ? 'true' : null},
+							aria-describedby=${errors?.get('link') != null ? 'link-error' : null}">
+			<p id="link-error" class="field-error" th:if="${errors?.get('link') != null}" th:text="${errors.get('link')}"></p>
+		</div>
+
+		<div class="form-actions">
+			<button type="submit" class="button" th:text="${editing ? 'Save' : 'Add adventure'}">Save</button>
+			<a th:href="${cancel}">Cancel</a>
+		</div>
+	</form>
+
+	<section class="card" th:if="${editing}">
+		<h2>Image</h2>
+		<img class="adventure-image" th:if="${adventure.hasImage()}" th:alt="${'Current photo for ' + adventure.title}"
+			 th:src="@{/groups/{g}/adventures/{a}/image(g=${group.id},a=${adventure.id},v=${adventure.imageVersion})}">
+		<form method="post" enctype="multipart/form-data" class="stacked-form"
+			  th:action="@{/groups/{g}/adventures/{a}/image(g=${group.id},a=${adventure.id})}">
+			<div class="field">
+				<label for="image" th:text="${adventure.hasImage() ? 'Replace image' : 'Add an image'}">Add an image</label>
+				<input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required
+					   aria-describedby="image-hint">
+				<p id="image-hint" class="muted">JPEG, PNG, or WebP, up to 10 MB.</p>
+			</div>
+			<div class="form-actions">
+				<button type="submit" class="button secondary">Upload</button>
+			</div>
+		</form>
+		<form th:if="${adventure.hasImage()}" method="post"
+			  th:action="@{/groups/{g}/adventures/{a}/image/remove(g=${group.id},a=${adventure.id})}"
+			  onsubmit="return confirm('Remove the image?')">
+			<button type="submit" class="link-button danger">Remove image</button>
+		</form>
+	</section>
+</main>
+</body>
+</html>

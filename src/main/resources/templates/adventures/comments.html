@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*
+  The comment thread (context: thread, and optionally commentText and commentError). Posting and
+  deleting re-render the whole thread with htmx, because the count changes; editing swaps one
+  comment. Without JavaScript, every form posts and redirects, and "Edit" opens the detail page
+  with that comment as a form.
+*/-->
+<section id="comments" class="comments" th:fragment="thread" aria-labelledby="comments-heading">
+	<!--/* After a delete, the heading takes the focus (htmx focuses [autofocus] in swapped content). */-->
+	<h2 id="comments-heading" tabindex="-1" th:text="${'Comments (' + thread.comments.size() + ')'}"
+		th:attr="autofocus=${focusComments == true ? 'autofocus' : null}">Comments (2)</h2>
+	<p class="muted" th:if="${thread.comments.isEmpty()}">No comments yet. Start the conversation!</p>
+	<ol class="comment-list" th:unless="${thread.comments.isEmpty()}">
+		<th:block th:each="c : ${thread.comments}">
+			<li th:replace="~{adventures/comments :: comment(c=${c}, editing=${thread.isEditing(c)}, editText=null, editError=null)}"></li>
+		</th:block>
+	</ol>
+
+	<form class="comment-form stacked-form" method="post"
+		  th:action="@{/groups/{g}/adventures/{a}/comments(g=${thread.groupId},a=${thread.adventureId})}"
+		  th:hx-post="@{/groups/{g}/adventures/{a}/comments(g=${thread.groupId},a=${thread.adventureId})}"
+		  hx-target="#comments" hx-swap="outerHTML">
+		<div class="field">
+			<label for="comment-text">Add a comment</label>
+			<textarea id="comment-text" name="text" rows="3" maxlength="2000" required
+					  th:text="${commentText}"
+					  th:attr="aria-invalid=${commentError != null ? 'true' : null},
+							   aria-describedby=${commentError != null ? 'comment-error' : null}"></textarea>
+			<p id="comment-error" class="field-error" th:if="${commentError != null}" th:text="${commentError}">Please write something.</p>
+		</div>
+		<div class="form-actions">
+			<button type="submit" class="button">Post comment</button>
+		</div>
+	</form>
+</section>
+
+<!--/* One comment, as text or (editing = true) as an edit form. */-->
+<li class="comment" th:fragment="comment(c, editing, editText, editError)" th:id="${'comment-' + c.id}">
+	<div class="comment-header">
+		<strong th:replace="~{fragments/author :: author(${c.author})}">Anna</strong>
+		<time class="muted" th:datetime="${#temporals.formatISO(c.createdAt)}"
+			  th:text="${#temporals.format(c.createdAt, 'd MMM yyyy, HH:mm')}">3 Oct 2026, 10:05</time>
+		<span class="muted" th:if="${c.edited()}"
+			  th:title="${'Edited ' + #temporals.format(c.editedAt, 'd MMM yyyy, HH:mm')}">(edited)</span>
+	</div>
+
+	<th:block th:unless="${editing}">
+		<p class="comment-text" th:text="${c.text}">I'm in, but only in August!</p>
+		<div class="comment-actions" th:if="${c.canEdit or c.canDelete}">
+			<a th:if="${c.canEdit}" class="link-button" th:id="${'comment-edit-link-' + c.id}"
+			   th:attr="autofocus=${focusEdit == true ? 'autofocus' : null}"
+			   th:href="@{/groups/{g}/adventures/{a}(g=${c.groupId},a=${c.adventureId},editComment=${c.id})} + '#comment-' + ${c.id}"
+			   th:hx-get="@{/groups/{g}/adventures/{a}/comments/{id}/edit(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+			   th:hx-target="${'#comment-' + c.id}" hx-swap="outerHTML">Edit<span class="visually-hidden"> comment</span></a>
+			<form th:if="${c.canDelete}" method="post"
+				  th:action="@{/groups/{g}/adventures/{a}/comments/{id}/delete(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+				  th:hx-post="@{/groups/{g}/adventures/{a}/comments/{id}/delete(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+				  hx-target="#comments" hx-swap="outerHTML" hx-confirm="Delete this comment?">
+				<button type="submit" class="link-button danger">Delete<span class="visually-hidden"> comment</span></button>
+			</form>
+		</div>
+	</th:block>
+
+	<form th:if="${editing}" class="stacked-form" method="post"
+		  th:action="@{/groups/{g}/adventures/{a}/comments/{id}/edit(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+		  th:hx-post="@{/groups/{g}/adventures/{a}/comments/{id}/edit(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+		  th:hx-target="${'#comment-' + c.id}" hx-swap="outerHTML">
+		<div class="field">
+			<label th:for="${'comment-edit-' + c.id}">Edit your comment</label>
+			<textarea th:id="${'comment-edit-' + c.id}" name="text" rows="3" maxlength="2000" required autofocus
+					  th:text="${editText != null ? editText : c.text}"
+					  th:attr="aria-invalid=${editError != null ? 'true' : null},
+							   aria-describedby=${editError != null ? 'comment-edit-error-' + c.id : null}"></textarea>
+			<p class="field-error" th:id="${'comment-edit-error-' + c.id}" th:if="${editError != null}"
+			   th:text="${editError}">Please write something.</p>
+		</div>
+		<div class="form-actions">
+			<button type="submit" class="button">Save</button>
+			<a th:href="@{/groups/{g}/adventures/{a}(g=${c.groupId},a=${c.adventureId})} + '#comment-' + ${c.id}"
+			   th:hx-get="@{/groups/{g}/adventures/{a}/comments/{id}(g=${c.groupId},a=${c.adventureId},id=${c.id})}"
+			   th:hx-target="${'#comment-' + c.id}" hx-swap="outerHTML">Cancel</a>
+		</div>
+	</form>
+</li>
+</body>
+</html>

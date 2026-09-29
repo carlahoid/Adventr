@@ -24,11 +24,15 @@
 		<h2 th:text="${'Members (' + members.size() + ')'}">Members (3)</h2>
 		<ul class="member-list">
 			<li th:each="m : ${members}">
-				<div>
+				<div class="member">
+					<th:block th:replace="~{fragments/avatar :: avatar(${m.userId}, ${m.displayName}, ${m.avatarVersion}, 'md')}"></th:block>
+					<div>
 					<strong th:text="${m.displayName}">Alex</strong>
 					<span class="muted" th:if="${m.you}">(you)</span>
 					<span class="badge" th:if="${m.owner}">Owner</span>
+					<div class="member-bio" th:if="${m.bio != null}" th:text="${m.bio}">Always up for a hike</div>
 					<div class="muted" th:text="${'Joined ' + #temporals.format(m.joinedAt, 'd MMM yyyy')}">Joined 3 Oct 2026</div>
+					</div>
 				</div>
 				<div class="member-actions" th:if="${group.owner and !m.you}">
 					<form th:action="@{/groups/{g}/members/{u}/make-owner(g=${group.id},u=${m.userId})}" method="post"

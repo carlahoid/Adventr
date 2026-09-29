@@ -18,14 +18,16 @@ public class UserService {
 	}
 
 	/**
-	 * Creates the local user for this Keycloak account, or refreshes its display name and
-	 * email from the token. Called on every login.
+	 * Creates the local user for this Keycloak account, or refreshes its email and (unless the
+	 * user set their own) display name from the token. Called on every login. Returns the
+	 * effective name, so that a custom name shows right after login.
 	 */
 	@Transactional
 	public CurrentUser provision(OidcUser oidcUser) {
-		String displayName = displayNameOf(oidcUser);
-		long id = this.users.upsert(oidcUser.getSubject(), displayName, oidcUser.getEmail());
-		return new CurrentUser(id, displayName);
+		UserRepository.Provisioned user = this.users.upsert(oidcUser.getSubject(), displayNameOf(oidcUser),
+				oidcUser.getEmail());
+		return new CurrentUser(user.getId(), user.getDisplayName(), User.avatarVersionOf(user.getAvatarPath()),
+				Theme.valueOf(user.getTheme()), user.getAccentColor());
 	}
 
 	/**
@@ -35,14 +37,15 @@ public class UserService {
 	@Transactional
 	public CurrentUser current(OidcUser oidcUser) {
 		return this.users.findByKeycloakSub(oidcUser.getSubject())
-			.map((user) -> new CurrentUser(user.getId(), user.getDisplayName()))
+			.map((user) -> new CurrentUser(user.getId(), user.getDisplayName(), user.getAvatarVersion(), user.getTheme(),
+					user.getAccentColor()))
 			.orElseGet(() -> provision(oidcUser));
 	}
 
 	/**
 	 * "Given Family" when Keycloak provides either name part, otherwise the username.
 	 */
-	static String displayNameOf(OidcUser oidcUser) {
+	public static String displayNameOf(OidcUser oidcUser) {
 		String fullName = Stream.of(oidcUser.getGivenName(), oidcUser.getFamilyName())
 			.filter(StringUtils::hasText)
 			.map(String::trim)

@@ -39,7 +39,7 @@ public class AuthorLabels {
 		return this.users.findAllById(ids)
 			.stream()
 			.map((user) -> new Author(user.getId(), user.getDisplayName(),
-					user.getDeletedAt() != null || !active.contains(user.getId())))
+					user.getDeletedAt() != null || !active.contains(user.getId()), user.getAvatarVersion()))
 			.collect(Collectors.toMap(Author::userId, Function.identity()));
 	}
 
